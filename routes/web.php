@@ -6,6 +6,10 @@ Route::get('/', function () {
     return view('welcome');
 });
 
+Route::get('/heure', function () {
+    return 'Il est ' . now()->format('H:i') . '.';
+});
+
 Route::get('/bonjour', function () {
     return 'Bonjour MDW3 ! Voici ma première route Laravel 13.';
 });
