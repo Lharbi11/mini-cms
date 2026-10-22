@@ -15,8 +15,15 @@ test('the heure route displays the current time', function () {
         ->assertSeeText('01/01/2025');
 });
 
-test('the version route displays the Laravel and PHP versions', function () {
-    $this->get('/version')
+test('the about page displays the author and group', function () {
+    $this->get('/a-propos')
         ->assertOk()
-        ->assertSeeText('Laravel '.app()->version().' - PHP '.PHP_VERSION);
+        ->assertSeeText('rayen harabi')
+        ->assertSeeText('MDW33');
+});
+
+test('the exercise routes are no longer available', function () {
+    foreach (['/bonjour', '/bonjour-court', '/bienvenue', '/version'] as $uri) {
+        $this->get($uri)->assertNotFound();
+    }
 });

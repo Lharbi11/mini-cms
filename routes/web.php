@@ -1,10 +1,9 @@
 <?php
 
+use App\Http\Controllers\PageController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', function () {
-    return view('welcome');
-});
+Route::get('/', [PageController::class, 'home']);
 
 Route::get('/heure', function () {
     $dateTime = now();
@@ -15,27 +14,4 @@ Route::get('/heure', function () {
     ]);
 });
 
-Route::get('/bonjour', function () {
-    return 'Bonjour MDW3 ! Voici ma première route Laravel 13.';
-});
-
-Route::get('/bonjour-court', fn () => 'Même résultat, écrit avec une fonction fléchée.');
-
-Route::get('/version', function () {
-    return 'Laravel '.app()->version().' - PHP '.PHP_VERSION;
-});
-
-Route::get('/bienvenue', function () {
-    return view('bienvenue', [
-        'etudiant' => 'rayen harabi',
-        'groupe' => 'MDW33',
-        'cours' => 'Atelier Framework Côté Serveur',
-    ]);
-});
-
-Route::get('/a-propos', function () {
-    return view('a-propos', [
-        'auteur' => 'rayen harabi',
-        'groupe' => 'MDW33',
-    ]);
-});
+Route::get('/a-propos', [PageController::class, 'about']);
