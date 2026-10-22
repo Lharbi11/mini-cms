@@ -8,7 +8,7 @@ Mini-CMS évoluera au fil du semestre vers une petite plateforme de publication 
 
 ## État actuel (session 04)
 
-- Routes : `/`, `/heure`, `/a-propos` et `/posts`.
+- Routes : `/`, `/heure`, `/a-propos`, `/posts`, les détails d'article par slug et les archives par année.
 - Les pages d'accueil et À propos sont servies par `PageController`; la liste des articles est servie par `PostController`; `/heure` reste une route closure.
 - Les articles sont temporairement stockés dans un tableau PHP, avant l'arrivée de la base de données en session 05.
 - Vues Blade : `home`, `a-propos` et `posts.index` utilisent le composant partagé `x-layout`; la vue `heure` reste autonome.
@@ -22,6 +22,8 @@ Mini-CMS évoluera au fil du semestre vers une petite plateforme de publication 
 | GET | `/heure` | Vue `heure` avec l'heure (format H:i) et la date (format d/m/Y) |
 | GET | `/a-propos` | Vue `a-propos` avec le nom de l'auteur et le groupe, servie par `PageController` |
 | GET | `/posts` | Liste de trois articles stockés dans un tableau PHP, servie par `PostController` |
+| GET | `/posts/{slug}` | Détail d'un article identifié par son slug |
+| GET | `/posts/archive/{year}` | Articles filtrés par année (liste vide si aucune correspondance) |
 
 ## Prérequis
 

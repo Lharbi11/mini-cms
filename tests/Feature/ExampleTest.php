@@ -25,7 +25,38 @@ test('the posts page lists the in-memory articles and includes the shared naviga
         ->assertSeeText('Premiers pas avec Blade')
         ->assertSeeText('Publié en 2026')
         ->assertSeeText('Publié en 2025')
+        ->assertSee('href="'.route('posts.index').'"', false)
+        ->assertSee('href="'.route('posts.show', 'decouvrir-laravel-13').'"', false)
+        ->assertSee('href="'.route('posts.archive', 2026).'"', false);
+});
+
+test('the post detail displays the article matching its slug', function () {
+    $this->get(route('posts.show', 'routes-et-controleurs'))
+        ->assertOk()
+        ->assertSee('<title>Routes et contrôleurs - Mini-CMS</title>', false)
+        ->assertSeeText('Publié en 2026')
+        ->assertSeeText('Une route associe une URL à une méthode de contrôleur.')
         ->assertSee('href="'.route('posts.index').'"', false);
+});
+
+test('the post archive filters articles by year and allows an empty year', function () {
+    $this->get(route('posts.archive', 2025))
+        ->assertOk()
+        ->assertSee('<title>Articles de 2025 - Mini-CMS</title>', false)
+        ->assertSeeText('Premiers pas avec Blade')
+        ->assertDontSeeText('Découvrir Laravel 13');
+
+    $this->get(route('posts.archive', 2030))
+        ->assertOk()
+        ->assertSee('<title>Articles de 2030 - Mini-CMS</title>', false)
+        ->assertSeeText('Articles de 2030')
+        ->assertDontSeeText('Premiers pas avec Blade');
+});
+
+test('post routes return 404 for invalid years and unknown or invalid slugs', function () {
+    $this->get('/posts/archive/abc')->assertNotFound();
+    $this->get('/posts/Article')->assertNotFound();
+    $this->get('/posts/article-inconnu')->assertNotFound();
 });
 
 test('the heure route displays the current time', function () {
