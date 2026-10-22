@@ -11,5 +11,12 @@ test('the heure route displays the current time', function () {
 
     $this->get('/heure')
         ->assertOk()
-        ->assertSeeText('Il est 14:30.');
+        ->assertSeeText('14:30')
+        ->assertSeeText('01/01/2025');
+});
+
+test('the version route displays the Laravel and PHP versions', function () {
+    $this->get('/version')
+        ->assertOk()
+        ->assertSeeText('Laravel '.app()->version().' - PHP '.PHP_VERSION);
 });

@@ -7,7 +7,12 @@ Route::get('/', function () {
 });
 
 Route::get('/heure', function () {
-    return 'Il est ' . now()->format('H:i') . '.';
+    $dateTime = now();
+
+    return view('heure', [
+        'heure' => $dateTime->format('H:i'),
+        'date' => $dateTime->format('d/m/Y'),
+    ]);
 });
 
 Route::get('/bonjour', function () {
@@ -15,6 +20,10 @@ Route::get('/bonjour', function () {
 });
 
 Route::get('/bonjour-court', fn () => 'Même résultat, écrit avec une fonction fléchée.');
+
+Route::get('/version', function () {
+    return 'Laravel '.app()->version().' - PHP '.PHP_VERSION;
+});
 
 Route::get('/bienvenue', function () {
     return view('bienvenue', [
