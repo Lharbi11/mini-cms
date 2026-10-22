@@ -10,7 +10,7 @@ Mini-CMS évoluera au fil du semestre vers une petite plateforme de publication 
 
 - Routes : `/`, `/heure` et `/a-propos`.
 - Les pages d'accueil et À propos sont servies par `PageController`; `/heure` reste une route closure.
-- Vues Blade : `welcome`, `heure` et `a-propos`.
+- Vues Blade : `home` et `a-propos` utilisent le composant partagé `x-layout`; la vue `heure` reste autonome.
 - Base de données SQLite locale (`database/database.sqlite`, non versionnée).
 
 ## Routes disponibles
