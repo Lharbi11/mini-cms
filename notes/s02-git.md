@@ -40,3 +40,11 @@ Ajouter et enregistrer uniquement ce fichier de notes :
 git add notes/s02-git.md
 git commit -m "Ajouter les notes Git de la session 02"
 ```
+
+## 6. Historique depuis lab-01
+
+Nombre de commits depuis lab-01 (avant le commit de ces notes) : 6.
+
+Fichiers modifiés depuis lab-01 : `README.md`, `notes/s02-git.md`, `resources/views/a-propos.blade.php`, `resources/views/heure.blade.php`, `routes/web.php`, `screenshots/s01-accueil.png`, `screenshots/s01-bienvenue.png`, `screenshots/s01-route-list.png`, `screenshots/s02-a-propos.png` et `tests/Feature/ExampleTest.php`.
+
+Ce que `git tag -n` affiche pour lab-01 : `lab-01 lab-01`.
