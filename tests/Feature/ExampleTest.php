@@ -19,7 +19,8 @@ test('the about page displays the author and group', function () {
     $this->get('/a-propos')
         ->assertOk()
         ->assertSeeText('rayen harabi')
-        ->assertSeeText('MDW33');
+        ->assertSeeText('MDW33')
+        ->assertSee('href="'.route('home').'"', false);
 });
 
 test('the exercise routes are no longer available', function () {

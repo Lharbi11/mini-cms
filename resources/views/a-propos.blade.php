@@ -15,8 +15,7 @@
     <p>Auteur : {{ $auteur }}</p>
     <p>Groupe : {{ $groupe }}</p>
     <p>
-        <a href="/">Accueil</a> |
-        <a href="/bienvenue">Bienvenue</a> |
+        <a href="{{ route('home') }}">Accueil</a> |
         <a href="/heure">Heure</a>
     </p>
 </body>
