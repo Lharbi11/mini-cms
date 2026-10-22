@@ -6,20 +6,22 @@ Auteur : Rayen Harabi, groupe MDW33.
 
 Mini-CMS évoluera au fil du semestre vers une petite plateforme de publication : pages publiques, back-office authentifié, API JSON et tests Pest. Chaque session se termine par un tag Git (`lab-01`, `lab-01b`, puis un tag par session).
 
-## État actuel (session 03)
+## État actuel (session 04)
 
-- Routes : `/`, `/heure` et `/a-propos`.
-- Les pages d'accueil et À propos sont servies par `PageController`; `/heure` reste une route closure.
-- Vues Blade : `home` et `a-propos` utilisent le composant partagé `x-layout`; la vue `heure` reste autonome.
+- Routes : `/`, `/heure`, `/a-propos` et `/posts`.
+- Les pages d'accueil et À propos sont servies par `PageController`; la liste des articles est servie par `PostController`; `/heure` reste une route closure.
+- Les articles sont temporairement stockés dans un tableau PHP, avant l'arrivée de la base de données en session 05.
+- Vues Blade : `home`, `a-propos` et `posts.index` utilisent le composant partagé `x-layout`; la vue `heure` reste autonome.
 - Base de données SQLite locale (`database/database.sqlite`, non versionnée).
 
 ## Routes disponibles
 
 | Méthode | URI | Réponse |
 |---|---|---|
-| GET | `/` | Vue `welcome`, servie par `PageController` |
+| GET | `/` | Vue `home`, servie par `PageController` |
 | GET | `/heure` | Vue `heure` avec l'heure (format H:i) et la date (format d/m/Y) |
 | GET | `/a-propos` | Vue `a-propos` avec le nom de l'auteur et le groupe, servie par `PageController` |
+| GET | `/posts` | Liste de trois articles stockés dans un tableau PHP, servie par `PostController` |
 
 ## Prérequis
 
