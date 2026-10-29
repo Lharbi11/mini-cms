@@ -25,7 +25,8 @@ class PostController extends Controller
     {
         return view('posts.index', [
             'heading' => 'Articles de '.$year,
-            'posts' => Post::whereYear('published_at', $year)
+            'posts' => Post::published()
+                ->whereYear('published_at', $year)
                 ->latest('id')
                 ->paginate(4),
         ]);

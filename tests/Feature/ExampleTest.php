@@ -397,7 +397,7 @@ test('the post archive filters articles by year and allows an empty year', funct
         ['title' => 'Article publié juin', 'slug' => 'article-publie-juin', 'is_published' => true, 'published_at' => '2026-06-15'],
         ['title' => 'Article publié octobre', 'slug' => 'article-publie-octobre', 'is_published' => true, 'published_at' => '2026-10-20'],
         ['title' => 'Article publié 2025', 'slug' => 'article-publie-2025', 'is_published' => true, 'published_at' => '2025-12-31'],
-        ['title' => 'Brouillon sans date', 'slug' => 'brouillon-sans-date'],
+        ['title' => 'Brouillon daté', 'slug' => 'brouillon-date', 'published_at' => '2026-04-04'],
     )->create();
 
     $this->get(route('posts.archive', 2026))
@@ -407,7 +407,7 @@ test('the post archive filters articles by year and allows an empty year', funct
         ->assertSeeText('Article publié juin')
         ->assertSeeText('Article publié octobre')
         ->assertDontSeeText('Article publié 2025')
-        ->assertDontSeeText('Brouillon sans date')
+        ->assertDontSeeText('Brouillon daté')
         ->assertSeeInOrder([
             'href="'.route('posts.index').'"',
             'aria-current="page"',
