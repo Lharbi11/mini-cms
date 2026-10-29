@@ -1,5 +1,10 @@
 <?php
 
+use App\Models\Post;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+
+uses(RefreshDatabase::class);
+
 test('the application returns a successful response', function () {
     $this->get('/')
         ->assertOk()
@@ -30,36 +35,66 @@ test('the home page renders the shared layout and links to the about page', func
         ->assertSee('resources/css/app.css', false);
 });
 
-test('the posts page lists the in-memory articles and includes the shared navigation', function () {
+test('the posts page lists database articles with pagination and shared navigation', function () {
+    Post::factory()->count(6)->sequence(
+        ['title' => 'Article de test 4', 'slug' => 'article-de-test-4', 'body' => 'Corps de test 4', 'is_published' => true, 'published_at' => '2026-10-04'],
+        ['title' => 'Article de test 3', 'slug' => 'article-de-test-3', 'body' => 'Corps de test 3'],
+        ['title' => 'Article de test 2', 'slug' => 'article-de-test-2', 'body' => 'Corps de test 2', 'is_published' => true, 'published_at' => '2026-10-02'],
+        ['title' => 'Article de test 1', 'slug' => 'article-de-test-1', 'body' => 'Corps de test 1'],
+        ['title' => 'Les migrations Laravel', 'slug' => 'les-migrations-laravel', 'body' => 'Les migrations créent les tables.'],
+        ['title' => 'Bienvenue sur Mini-CMS', 'slug' => 'bienvenue-sur-mini-cms', 'body' => 'Présentation du projet Mini-CMS.', 'is_published' => true, 'published_at' => '2026-10-01'],
+    )->create();
+
     $response = $this->get(route('posts.index'));
 
     $response->assertOk()
         ->assertSee('<title>Tous les articles - Mini-CMS</title>', false)
         ->assertSeeText('Bienvenue sur Mini-CMS')
-        ->assertSeeText('Comprendre le routage Laravel')
-        ->assertSeeText('Les composants Blade')
-        ->assertSeeText('Préparer la suite du projet')
-        ->assertSeeText("Présentation du projet fil rouge de l'atelier et de ses objectifs.")
-        ->assertSeeText('Équipe Mini-CMS - 01/10/2026')
+        ->assertSeeText('Les migrations Laravel')
+        ->assertSeeText('Article de test 1')
+        ->assertSeeText('Article de test 2')
+        ->assertSeeText('Corps de test 2')
+        ->assertSeeText('Publié le 02/10/2026')
+        ->assertSeeText('Non publié')
+        ->assertSeeText('Brouillon')
+        ->assertSeeText('Showing 1 to 4 of 6 results')
+        ->assertSeeText('Next')
         ->assertSeeText('Archive 2026')
         ->assertSeeText("Lire l'article")
         ->assertSee('<h1 class="text-3xl font-bold text-gray-900">Tous les articles</h1>', false)
         ->assertDontSeeText('Le projet Mini-CMS et ses objectifs.')
         ->assertSee('href="'.route('posts.index').'"', false)
-        ->assertSee('href="'.route('posts.show', 'bienvenue-sur-mini-cms').'"', false)
+        ->assertSee('href="'.route('posts.show', Post::where('slug', 'bienvenue-sur-mini-cms')->first()).'"', false)
         ->assertSee('href="'.route('posts.archive', 2026).'"', false);
 
-    expect(substr_count($response->getContent(), '<article'))->toBe(4)
-        ->and(substr_count($response->getContent(), 'À la une'))->toBe(1);
+    expect(substr_count($response->getContent(), '<article'))->toBe(4);
+
+    $secondPage = $this->get(route('posts.index', ['page' => 2]));
+
+    $secondPage->assertOk()
+        ->assertSeeText('Article de test 3')
+        ->assertSeeText('Article de test 4')
+        ->assertSeeText('Previous')
+        ->assertDontSeeText('Showing 1 to 4 of 6 results');
+
+    expect(substr_count($secondPage->getContent(), '<article'))->toBe(2);
 });
 
-test('the post detail displays the article matching its slug', function () {
-    $this->get(route('posts.show', 'comprendre-le-routage'))
+test('the post detail resolves its model from the route and displays database attributes', function () {
+    $post = Post::factory()->create([
+        'title' => 'Comprendre le routage Laravel',
+        'slug' => 'comprendre-le-routage',
+        'body' => "Une route associe une URL à une action.\nLe slug est transmis au contrôleur.",
+        'is_published' => true,
+        'published_at' => '2026-10-03 12:00:00',
+    ]);
+
+    $this->get(route('posts.show', $post))
         ->assertOk()
         ->assertSee('<title>Comprendre le routage Laravel - Mini-CMS</title>', false)
-        ->assertSeeText('Équipe Mini-CMS - 03/10/2026')
+        ->assertSeeText('Publié le 03/10/2026')
         ->assertSeeText('Une route associe une URL à une action.')
-        ->assertSeeText('Les paramètres, comme le slug')
+        ->assertSeeText('Le slug est transmis au contrôleur.')
         ->assertSee('href="'.route('posts.index').'" class="text-sm text-indigo-600 hover:underline">Retour aux articles</a>', false)
         ->assertSeeInOrder([
             'href="'.route('posts.index').'"',
@@ -70,35 +105,22 @@ test('the post detail displays the article matching its slug', function () {
 });
 
 test('the post archive filters articles by year and allows an empty year', function () {
+    Post::factory()->count(5)->sequence(
+        ['title' => 'Article publié janvier', 'slug' => 'article-publie-janvier', 'is_published' => true, 'published_at' => '2026-01-10'],
+        ['title' => 'Article publié juin', 'slug' => 'article-publie-juin', 'is_published' => true, 'published_at' => '2026-06-15'],
+        ['title' => 'Article publié octobre', 'slug' => 'article-publie-octobre', 'is_published' => true, 'published_at' => '2026-10-20'],
+        ['title' => 'Article publié 2025', 'slug' => 'article-publie-2025', 'is_published' => true, 'published_at' => '2025-12-31'],
+        ['title' => 'Brouillon sans date', 'slug' => 'brouillon-sans-date'],
+    )->create();
+
     $this->get(route('posts.archive', 2026))
         ->assertOk()
         ->assertSee('<title>Articles de 2026 - Mini-CMS</title>', false)
-        ->assertSeeText('Bienvenue sur Mini-CMS')
-        ->assertSeeText('Préparer la suite du projet')
-        ->assertSeeInOrder([
-            'href="'.route('posts.index').'"',
-            'aria-current="page"',
-            'bg-indigo-600 text-white',
-            'Articles',
-        ], false)
-        ->assertDontSeeText('Aucun article ne correspond à cette année.');
-
-    $this->get(route('posts.archive', 2025))
-        ->assertOk()
-        ->assertSee('<title>Articles de 2025 - Mini-CMS</title>', false)
-        ->assertSeeText('Aucun article')
-        ->assertSeeText("Il n'y a pas encore d'article publié.")
-        ->assertSee('<h1 class="text-3xl font-bold text-gray-900">Articles de 2025</h1>', false)
-        ->assertDontSeeText('Le projet Mini-CMS et ses objectifs.')
-        ->assertSee('role="status"', false)
-        ->assertDontSeeText('Bienvenue sur Mini-CMS');
-});
-
-test('the 2026 archive shows four article cards with the articles navigation active', function () {
-    $response = $this->get(route('posts.archive', 2026));
-
-    $response->assertOk()
-        ->assertSee('<title>Articles de 2026 - Mini-CMS</title>', false)
+        ->assertSeeText('Article publié janvier')
+        ->assertSeeText('Article publié juin')
+        ->assertSeeText('Article publié octobre')
+        ->assertDontSeeText('Article publié 2025')
+        ->assertDontSeeText('Brouillon sans date')
         ->assertSeeInOrder([
             'href="'.route('posts.index').'"',
             'aria-current="page"',
@@ -106,13 +128,50 @@ test('the 2026 archive shows four article cards with the articles navigation act
             'Articles',
         ], false);
 
-    expect(substr_count($response->getContent(), '<article'))->toBe(4);
+    $archive2025 = $this->get(route('posts.archive', 2025));
+
+    $archive2025
+        ->assertOk()
+        ->assertSee('<title>Articles de 2025 - Mini-CMS</title>', false)
+        ->assertSeeText('Article publié 2025')
+        ->assertDontSeeText('Article publié janvier');
+
+    Post::query()->delete();
+
+    $this->get(route('posts.archive', 2025))
+        ->assertOk()
+        ->assertSeeText('Aucun article')
+        ->assertSee('<h1 class="text-3xl font-bold text-gray-900">Articles de 2025</h1>', false)
+        ->assertDontSeeText('Le projet Mini-CMS et ses objectifs.')
+        ->assertSee('role="status"', false)
+        ->assertDontSeeText('Bienvenue sur Mini-CMS');
 });
 
-test('post routes return 404 for invalid years and unknown or invalid slugs', function () {
+test('the archive shows three published 2026 articles with the articles navigation active', function () {
+    Post::factory()->count(3)->sequence(
+        ['title' => 'Article publié 1', 'published_at' => '2026-01-10', 'is_published' => true],
+        ['title' => 'Article publié 2', 'published_at' => '2026-06-15', 'is_published' => true],
+        ['title' => 'Article publié 3', 'published_at' => '2026-10-20', 'is_published' => true],
+    )->create();
+
+    $response = $this->get(route('posts.archive', 2026));
+
+    $response->assertOk()
+        ->assertSee('<title>Articles de 2026 - Mini-CMS</title>', false)
+        ->assertSeeText('Article publié 1')
+        ->assertSeeText('Article publié 2')
+        ->assertSeeText('Article publié 3')
+        ->assertSeeInOrder([
+            'href="'.route('posts.index').'"',
+            'aria-current="page"',
+            'bg-indigo-600 text-white',
+            'Articles',
+        ], false);
+});
+
+test('post routes return 404 for invalid years and unknown model ids', function () {
     $this->get('/posts/archive/abc')->assertNotFound();
-    $this->get('/posts/Article')->assertNotFound();
-    $this->get('/posts/article-inconnu')->assertNotFound();
+    $this->get('/posts/999')->assertNotFound();
     $this->get('/posts/inconnu')->assertNotFound();
 });
 
@@ -136,11 +195,12 @@ test('the about page displays the author and group', function () {
         ->assertSee('<h1 class="text-3xl font-bold text-gray-900">À propos</h1>', false)
         ->assertSeeText('Le projet Mini-CMS et ses objectifs.')
         ->assertSeeText('Projet pédagogique')
-        ->assertSeeText("Ce site évolue à chaque session : les pages que vous voyez aujourd'hui seront reliées à une base de données dans la suite du cours.")
-        ->assertSeeText('Données provisoires')
-        ->assertSeeText("Les articles affichés viennent d'un tableau PHP écrit dans le contrôleur. Ils ne sont pas enregistrés.")
+        ->assertSeeText("Ce site évolue à chaque session de l'atelier.")
         ->assertSee('role="status" class="border-l-4 p-4 rounded border-blue-500 bg-blue-50 text-blue-900"', false)
-        ->assertSee('role="status" class="border-l-4 p-4 rounded border-amber-500 bg-amber-50 text-amber-900"', false)
+        ->assertSee('role="status" class="border-l-4 p-4 rounded border-green-500 bg-green-50 text-green-900"', false)
+        ->assertSeeText('Données en base')
+        ->assertSeeText('Les articles sont enregistrés dans une base SQLite et lus avec Eloquent.')
+        ->assertDontSeeText('Données provisoires')
         ->assertSeeText('rayen harabi')
         ->assertSeeText('MDW33')
         ->assertSeeInOrder([
