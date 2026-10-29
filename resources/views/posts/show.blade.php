@@ -14,6 +14,10 @@
             @endif
         </p>
 
+        @if ($post->excerpt)
+            <p class="mb-6 text-lg text-gray-600">{{ $post->excerpt }}</p>
+        @endif
+
         <div class="whitespace-pre-line leading-relaxed text-gray-800">{{ $post->body }}</div>
     </article>
 </x-layout>

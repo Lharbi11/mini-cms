@@ -17,7 +17,8 @@ it('shows the posts list', function () {
 
     $this->get(route('posts.index'))
         ->assertOk()
-        ->assertSee('Premier article');
+        ->assertSee('Premier article')
+        ->assertSee('Contenu du premier article de test.');
 });
 
 it('shows a message when there is no post', function () {

@@ -88,6 +88,7 @@ test('the create form displays its fields and validation instructions', function
         ->assertSee('name="_token"', false)
         ->assertSee('name="title"', false)
         ->assertSee('name="slug"', false)
+        ->assertSee('name="excerpt"', false)
         ->assertSee('name="body"', false)
         ->assertSee('name="is_published"', false)
         ->assertDontSee(' required', false);
@@ -116,11 +117,13 @@ test('the post form preserves entered values after validation fails', function (
         ->post(route('posts.store'), [
             'title' => 'A retained title',
             'slug' => 'Invalid Slug',
+            'excerpt' => 'A retained excerpt',
             'body' => 'A valid body with enough characters.',
         ])
         ->assertOk()
         ->assertSee('value="A retained title"', false)
         ->assertSee('value="Invalid Slug"', false)
+        ->assertSee('value="A retained excerpt"', false)
         ->assertSeeText('The slug field format is invalid.');
 });
 
@@ -145,6 +148,7 @@ test('the post form rejects values that violate validation rules', function (arr
     $validInput = [
         'title' => 'A valid title',
         'slug' => 'new-post',
+        'excerpt' => 'A concise summary of this post.',
         'body' => 'This body contains enough characters.',
         'is_published' => '1',
     ];
@@ -162,12 +166,29 @@ test('the post form rejects values that violate validation rules', function (arr
     'invalid publication checkbox value' => [['is_published' => 'sometimes'], 'is_published'],
 ]);
 
+test('the post form rejects excerpts longer than 255 characters', function () {
+    $this->from(route('posts.create'))
+        ->post(route('posts.store'), [
+            'title' => 'A valid title',
+            'slug' => 'a-valid-title',
+            'excerpt' => str_repeat('a', 256),
+            'body' => 'This body contains enough characters.',
+        ])
+        ->assertRedirect(route('posts.create'))
+        ->assertSessionHasErrors([
+            'excerpt' => 'The excerpt field must not be greater than 255 characters.',
+        ]);
+
+    $this->assertDatabaseCount('posts', 0);
+});
+
 test('a valid published post is stored, shown, and listed using server-controlled publication time', function () {
     $this->travelTo('2026-10-29 12:00:00');
 
     $response = $this->post(route('posts.store'), [
         'title' => 'Created from the browser',
         'slug' => 'created-from-the-browser',
+        'excerpt' => 'A concise summary of this post.',
         'body' => 'A sufficiently long article body with <script>alert(1)</script>.',
         'is_published' => '1',
         'published_at' => '2020-01-01 00:00:00',
@@ -180,6 +201,7 @@ test('a valid published post is stored, shown, and listed using server-controlle
         'id' => $post->id,
         'title' => 'Created from the browser',
         'slug' => 'created-from-the-browser',
+        'excerpt' => 'A concise summary of this post.',
         'is_published' => true,
         'published_at' => '2026-10-29 12:00:00',
     ]);
@@ -187,12 +209,14 @@ test('a valid published post is stored, shown, and listed using server-controlle
     $this->get(route('posts.show', $post))
         ->assertOk()
         ->assertSeeText('Created from the browser')
+        ->assertSeeText('A concise summary of this post.')
         ->assertSee('A sufficiently long article body with &lt;script&gt;alert(1)&lt;/script&gt;.', false)
         ->assertDontSee('<script>alert(1)</script>', false);
 
     $this->get(route('posts.index'))
         ->assertOk()
-        ->assertSeeText('Created from the browser');
+        ->assertSeeText('Created from the browser')
+        ->assertSeeText('A concise summary of this post.');
 });
 
 test('a post submitted without publication stays a draft without a publication date', function () {
