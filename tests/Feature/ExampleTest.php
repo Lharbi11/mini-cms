@@ -12,7 +12,9 @@ test('the home page renders the shared layout and links to the about page', func
         ->assertOk()
         ->assertSee('href="'.route('home').'"', false)
         ->assertSee('href="'.route('posts.index').'"', false)
+        ->assertSee('href="'.route('time').'"', false)
         ->assertSee('href="'.route('about').'"', false)
+        ->assertSee('<a href="'.route('home').'" class="font-semibold text-red-600" aria-current="page">', false)
         ->assertSee('resources/css/app.css', false);
 });
 
@@ -20,37 +22,44 @@ test('the posts page lists the in-memory articles and includes the shared naviga
     $this->get(route('posts.index'))
         ->assertOk()
         ->assertSee('<title>Tous les articles - Mini-CMS</title>', false)
-        ->assertSeeText('Découvrir Laravel 13')
-        ->assertSeeText('Routes et contrôleurs')
-        ->assertSeeText('Premiers pas avec Blade')
-        ->assertSeeText('Publié en 2026')
-        ->assertSeeText('Publié en 2025')
+        ->assertSeeText('Bienvenue sur Mini-CMS')
+        ->assertSeeText('Comprendre le routage Laravel')
+        ->assertSeeText('Les composants Blade')
+        ->assertSeeText('Préparer la suite du projet')
+        ->assertSeeText("Présentation du projet fil rouge de l'atelier et de ses objectifs.")
+        ->assertSeeText('Par Équipe Mini-CMS · 01/10/2026')
+        ->assertSeeText('À la une')
+        ->assertSeeText('01/10/2026')
         ->assertSee('href="'.route('posts.index').'"', false)
-        ->assertSee('href="'.route('posts.show', 'decouvrir-laravel-13').'"', false)
+        ->assertSee('href="'.route('posts.show', 'bienvenue-sur-mini-cms').'"', false)
         ->assertSee('href="'.route('posts.archive', 2026).'"', false);
 });
 
 test('the post detail displays the article matching its slug', function () {
-    $this->get(route('posts.show', 'routes-et-controleurs'))
+    $this->get(route('posts.show', 'comprendre-le-routage'))
         ->assertOk()
-        ->assertSee('<title>Routes et contrôleurs - Mini-CMS</title>', false)
-        ->assertSeeText('Publié en 2026')
-        ->assertSeeText('Une route associe une URL à une méthode de contrôleur.')
+        ->assertSee('<title>Comprendre le routage Laravel - Mini-CMS</title>', false)
+        ->assertSeeText('03/10/2026')
+        ->assertSeeText("Comment une URL arrive jusqu'à un contrôleur et une vue.")
+        ->assertSeeText('Par Équipe Mini-CMS · 03/10/2026')
+        ->assertSeeText('Les paramètres, comme le slug')
         ->assertSee('href="'.route('posts.index').'"', false);
 });
 
 test('the post archive filters articles by year and allows an empty year', function () {
+    $this->get(route('posts.archive', 2026))
+        ->assertOk()
+        ->assertSee('<title>Articles de 2026 - Mini-CMS</title>', false)
+        ->assertSeeText('Bienvenue sur Mini-CMS')
+        ->assertSeeText('Préparer la suite du projet')
+        ->assertSee('<a href="'.route('posts.index').'" class="font-semibold text-red-600" aria-current="page">', false)
+        ->assertDontSeeText('Aucun article ne correspond à cette année.');
+
     $this->get(route('posts.archive', 2025))
         ->assertOk()
         ->assertSee('<title>Articles de 2025 - Mini-CMS</title>', false)
-        ->assertSeeText('Premiers pas avec Blade')
-        ->assertDontSeeText('Découvrir Laravel 13');
-
-    $this->get(route('posts.archive', 2030))
-        ->assertOk()
-        ->assertSee('<title>Articles de 2030 - Mini-CMS</title>', false)
-        ->assertSeeText('Articles de 2030')
-        ->assertDontSeeText('Premiers pas avec Blade');
+        ->assertSeeText('Aucun article ne correspond à cette année.')
+        ->assertDontSeeText('Bienvenue sur Mini-CMS');
 });
 
 test('post routes return 404 for invalid years and unknown or invalid slugs', function () {
@@ -80,6 +89,7 @@ test('the about page displays the author and group', function () {
         ->assertSeeText('MDW33')
         ->assertSee('<a href="'.route('home').'" class="text-red-600 underline">Accueil</a> |', false)
         ->assertSee('<a href="'.route('time').'" class="text-red-600 underline">Heure</a>', false)
+        ->assertSee('<a href="'.route('about').'" class="font-semibold text-red-600" aria-current="page">', false)
         ->assertSee('href="'.route('home').'"', false)
         ->assertSee('href="'.route('posts.index').'"', false)
         ->assertSee('href="'.route('time').'"', false)
