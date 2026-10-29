@@ -1,6 +1,17 @@
-@props(['route', 'active' => false])
+@props(['to', 'match' => null])
 
-<a href="{{ route($route) }}" {{ $attributes->class([
-    'font-semibold text-red-600' => $active,
-    'text-gray-600 hover:text-gray-900' => ! $active,
-]) }}@if ($active) aria-current="page"@endif>{{ $slot }}</a>
+@php
+    $active = request()->routeIs($match ?? $to);
+@endphp
+
+<a
+    href="{{ route($to) }}"
+    @if ($active) aria-current="page" @endif
+    {{ $attributes->class([
+        'px-3 py-2 rounded-md text-sm font-medium transition-colors',
+        'bg-indigo-600 text-white' => $active,
+        'text-gray-700 hover:bg-gray-100' => ! $active,
+    ]) }}
+>
+    {{ $slot }}
+</a>

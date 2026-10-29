@@ -14,7 +14,12 @@ test('the home page renders the shared layout and links to the about page', func
         ->assertSee('href="'.route('posts.index').'"', false)
         ->assertSee('href="'.route('time').'"', false)
         ->assertSee('href="'.route('about').'"', false)
-        ->assertSee('<a href="'.route('home').'" class="font-semibold text-red-600" aria-current="page">', false)
+        ->assertSeeInOrder([
+            'href="'.route('home').'"',
+            'aria-current="page"',
+            'bg-indigo-600 text-white',
+            'Accueil',
+        ], false)
         ->assertSee('resources/css/app.css', false);
 });
 
@@ -52,7 +57,12 @@ test('the post archive filters articles by year and allows an empty year', funct
         ->assertSee('<title>Articles de 2026 - Mini-CMS</title>', false)
         ->assertSeeText('Bienvenue sur Mini-CMS')
         ->assertSeeText('Préparer la suite du projet')
-        ->assertSee('<a href="'.route('posts.index').'" class="font-semibold text-red-600" aria-current="page">', false)
+        ->assertSeeInOrder([
+            'href="'.route('posts.index').'"',
+            'aria-current="page"',
+            'bg-indigo-600 text-white',
+            'Articles',
+        ], false)
         ->assertDontSeeText('Aucun article ne correspond à cette année.');
 
     $this->get(route('posts.archive', 2025))
@@ -93,7 +103,12 @@ test('the about page displays the author and group', function () {
         ->assertSee('role="status" class="border-l-4 p-4 rounded border-amber-500 bg-amber-50 text-amber-900"', false)
         ->assertSeeText('rayen harabi')
         ->assertSeeText('MDW33')
-        ->assertSee('<a href="'.route('about').'" class="font-semibold text-red-600" aria-current="page">', false)
+        ->assertSeeInOrder([
+            'href="'.route('about').'"',
+            'aria-current="page"',
+            'bg-indigo-600 text-white',
+            'À propos',
+        ], false)
         ->assertSee('href="'.route('home').'"', false)
         ->assertSee('href="'.route('posts.index').'"', false)
         ->assertSee('href="'.route('time').'"', false)
