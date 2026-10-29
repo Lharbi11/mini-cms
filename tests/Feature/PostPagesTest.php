@@ -41,6 +41,28 @@ it('shows a single post', function () {
         ->assertSee('Texte complet de cet article de test.');
 });
 
+it('deletes a post after presenting a confirmation form', function () {
+    $post = Post::factory()->create([
+        'title' => 'Article à supprimer',
+        'slug' => 'article-a-supprimer',
+    ]);
+
+    $this->get(route('posts.show', $post))
+        ->assertOk()
+        ->assertSee('action="'.route('posts.destroy', $post).'"', false)
+        ->assertSee('name="_method" value="DELETE"', false)
+        ->assertSeeText("Cette action est définitive : l'article sera effacé de la base.")
+        ->assertSeeText('Confirmer la suppression');
+
+    $this->delete(route('posts.destroy', $post))
+        ->assertRedirect(route('posts.index'));
+
+    $this->assertModelMissing($post);
+
+    $this->get(route('posts.show', $post))
+        ->assertNotFound();
+});
+
 it('returns 404 for an unknown post', function () {
     $this->get('/posts/999')->assertNotFound();
 });
