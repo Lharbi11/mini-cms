@@ -94,6 +94,131 @@ test('the create form displays its fields and validation instructions', function
         ->assertDontSee(' required', false);
 });
 
+test('the edit form is prefilled with the post and uses the update route', function () {
+    $post = Post::factory()->create([
+        'title' => 'Article à modifier',
+        'slug' => 'article-a-modifier',
+        'excerpt' => 'Extrait actuel',
+        'body' => 'Contenu actuel suffisamment long pour remplir le formulaire.',
+        'is_published' => true,
+        'published_at' => '2026-10-28 12:00:00',
+    ]);
+
+    $this->get(route('posts.edit', $post))
+        ->assertOk()
+        ->assertSee('<title>Modifier Article à modifier - Mini-CMS</title>', false)
+        ->assertSee('action="'.route('posts.update', $post).'"', false)
+        ->assertSee('name="_method" value="PUT"', false)
+        ->assertSee('value="Article à modifier"', false)
+        ->assertSee('value="article-a-modifier"', false)
+        ->assertSee('value="Extrait actuel"', false)
+        ->assertSee('Contenu actuel suffisamment long pour remplir le formulaire.')
+        ->assertSee('name="is_published" value="1" checked', false);
+});
+
+test('an article can be updated while keeping its current slug', function () {
+    $this->travelTo('2026-10-29 12:00:00');
+
+    $post = Post::factory()->create([
+        'title' => 'Titre initial',
+        'slug' => 'slug-conserve',
+        'excerpt' => 'Ancien extrait',
+        'body' => 'Ancien contenu suffisamment long pour être valide.',
+        'is_published' => true,
+        'published_at' => '2026-10-20 09:30:00',
+    ]);
+
+    $this->put(route('posts.update', $post), [
+        'title' => 'Titre modifié',
+        'slug' => 'slug-conserve',
+        'excerpt' => 'Nouvel extrait',
+        'body' => 'Nouveau contenu suffisamment long pour être valide.',
+        'is_published' => '1',
+    ])
+        ->assertRedirect(route('posts.show', $post));
+
+    $this->assertDatabaseHas('posts', [
+        'id' => $post->id,
+        'title' => 'Titre modifié',
+        'slug' => 'slug-conserve',
+        'excerpt' => 'Nouvel extrait',
+        'body' => 'Nouveau contenu suffisamment long pour être valide.',
+        'is_published' => true,
+        'published_at' => '2026-10-20 09:30:00',
+    ]);
+
+    $this->get(route('posts.show', $post))
+        ->assertOk()
+        ->assertSeeText('Titre modifié')
+        ->assertSeeText('Nouvel extrait')
+        ->assertSeeText('Nouveau contenu suffisamment long pour être valide.')
+        ->assertSee('href="'.route('posts.edit', $post).'"', false);
+});
+
+test('an update rejects another post slug and preserves the existing post', function () {
+    $post = Post::factory()->create([
+        'title' => 'Article inchangé',
+        'slug' => 'article-inchange',
+        'body' => 'Contenu initial suffisamment long pour être valide.',
+    ]);
+
+    Post::factory()->create(['slug' => 'slug-deja-utilise']);
+
+    $this->from(route('posts.edit', $post))
+        ->put(route('posts.update', $post), [
+            'title' => 'Titre modifié',
+            'slug' => 'slug-deja-utilise',
+            'excerpt' => '',
+            'body' => 'Nouveau contenu suffisamment long pour être valide.',
+            'is_published' => '0',
+        ])
+        ->assertRedirect(route('posts.edit', $post))
+        ->assertSessionHasErrors([
+            'slug' => 'The slug has already been taken.',
+        ]);
+
+    $this->assertDatabaseHas('posts', [
+        'id' => $post->id,
+        'title' => 'Article inchangé',
+        'slug' => 'article-inchange',
+        'body' => 'Contenu initial suffisamment long pour être valide.',
+        'is_published' => false,
+        'published_at' => null,
+    ]);
+});
+
+test('an invalid update keeps the unchecked publication value and does not change the post', function () {
+    $post = Post::factory()->create([
+        'title' => 'Article publié',
+        'slug' => 'article-publie',
+        'excerpt' => 'Extrait conservé',
+        'body' => 'Contenu publié suffisamment long pour être valide.',
+        'is_published' => true,
+        'published_at' => '2026-10-20 09:30:00',
+    ]);
+
+    $this->followingRedirects()
+        ->from(route('posts.edit', $post))
+        ->put(route('posts.update', $post), [
+            'title' => '',
+            'slug' => 'article-publie',
+            'excerpt' => 'Extrait conservé',
+            'body' => 'Contenu publié suffisamment long pour être valide.',
+            'is_published' => '0',
+        ])
+        ->assertOk()
+        ->assertSeeText('The title field is required.')
+        ->assertSee('value=""', false)
+        ->assertDontSee('name="is_published" value="1" checked', false);
+
+    $this->assertDatabaseHas('posts', [
+        'id' => $post->id,
+        'title' => 'Article publié',
+        'is_published' => true,
+        'published_at' => '2026-10-20 09:30:00',
+    ]);
+});
+
 test('the post form reports missing required fields without creating a post', function () {
     $this->followingRedirects()
         ->from(route('posts.create'))
