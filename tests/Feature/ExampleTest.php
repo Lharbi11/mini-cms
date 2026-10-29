@@ -4,6 +4,13 @@ test('the application returns a successful response', function () {
     $this->get('/')
         ->assertOk()
         ->assertSee('<title>Accueil - Mini-CMS</title>', false)
+        ->assertSeeText('Bienvenue sur Mini-CMS')
+        ->assertSeeText('Une petite plateforme de publication construite pas à pas')
+        ->assertSee('href="'.route('posts.index').'"', false)
+        ->assertSeeText('Lire les articles')
+        ->assertSeeText('Sprint en cours')
+        ->assertSeeText('Les composants Blade évitent de recopier le même code HTML dans chaque page.')
+        ->assertSee('bg-green-50 text-green-900', false)
         ->assertSee('Mini-CMS - Atelier Framework Côté Serveur');
 });
 
@@ -48,11 +55,16 @@ test('the post detail displays the article matching its slug', function () {
     $this->get(route('posts.show', 'comprendre-le-routage'))
         ->assertOk()
         ->assertSee('<title>Comprendre le routage Laravel - Mini-CMS</title>', false)
-        ->assertSeeText('03/10/2026')
-        ->assertSeeText("Comment une URL arrive jusqu'à un contrôleur et une vue.")
-        ->assertSeeText('Par Équipe Mini-CMS · 03/10/2026')
+        ->assertSeeText('Équipe Mini-CMS - 03/10/2026')
+        ->assertSeeText('Une route associe une URL à une action.')
         ->assertSeeText('Les paramètres, comme le slug')
-        ->assertSee('href="'.route('posts.index').'"', false);
+        ->assertSee('href="'.route('posts.index').'" class="text-sm text-indigo-600 hover:underline">Retour aux articles</a>', false)
+        ->assertSeeInOrder([
+            'href="'.route('posts.index').'"',
+            'aria-current="page"',
+            'bg-indigo-600 text-white',
+            'Articles',
+        ], false);
 });
 
 test('the post archive filters articles by year and allows an empty year', function () {
@@ -97,6 +109,7 @@ test('post routes return 404 for invalid years and unknown or invalid slugs', fu
     $this->get('/posts/archive/abc')->assertNotFound();
     $this->get('/posts/Article')->assertNotFound();
     $this->get('/posts/article-inconnu')->assertNotFound();
+    $this->get('/posts/inconnu')->assertNotFound();
 });
 
 test('the named time route displays the current time in the shared layout', function () {
