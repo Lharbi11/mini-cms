@@ -10,9 +10,9 @@ test('the application returns a successful response', function () {
         ->assertSeeText('Une petite plateforme de publication construite pas à pas')
         ->assertSee('href="'.route('posts.index').'"', false)
         ->assertSeeText('Lire les articles')
-        ->assertSeeText('Sprint en cours')
-        ->assertSeeText('Les composants Blade évitent de recopier le même code HTML dans chaque page.')
-        ->assertSee('bg-green-50 text-green-900', false)
+        ->assertSeeText('Derniers articles publiés')
+        ->assertSeeText('Aucun article publié')
+        ->assertDontSeeText('Sprint en cours')
         ->assertSee('Mini-CMS - Atelier Framework Côté Serveur');
 });
 

@@ -49,3 +49,60 @@ it('shows the create form', function () {
         ->assertOk()
         ->assertSee('Nouvel article');
 });
+
+it('shows only the three most recently published posts on the home page', function () {
+    $this->travelTo('2026-10-29 12:00:00');
+
+    Post::create([
+        'title' => 'Publication la plus ancienne',
+        'slug' => 'publication-plus-ancienne',
+        'body' => 'Premier article publié de la liste récente.',
+        'is_published' => true,
+        'published_at' => now()->subDays(4),
+    ]);
+
+    Post::create([
+        'title' => 'Publication récente trois',
+        'slug' => 'publication-recente-trois',
+        'body' => 'Troisième article publié le plus récemment.',
+        'is_published' => true,
+        'published_at' => now()->subDays(3),
+    ]);
+
+    Post::create([
+        'title' => 'Publication récente deux',
+        'slug' => 'publication-recente-deux',
+        'body' => 'Deuxième article publié le plus récemment.',
+        'is_published' => true,
+        'published_at' => now()->subDays(2),
+    ]);
+
+    Post::create([
+        'title' => 'Publication récente une',
+        'slug' => 'publication-recente-une',
+        'body' => 'Article publié le plus récemment.',
+        'is_published' => true,
+        'published_at' => now()->subDay(),
+    ]);
+
+    Post::create([
+        'title' => 'Brouillon à masquer',
+        'slug' => 'brouillon-a-masquer',
+        'body' => 'Ce brouillon ne doit pas apparaître sur l’accueil.',
+        'is_published' => false,
+        'published_at' => now(),
+    ]);
+
+    $this->get(route('home'))
+        ->assertOk()
+        ->assertSeeText('Publication récente une')
+        ->assertSeeText('Publication récente deux')
+        ->assertSeeText('Publication récente trois')
+        ->assertDontSeeText('Publication la plus ancienne')
+        ->assertDontSeeText('Brouillon à masquer')
+        ->assertSeeInOrder([
+            'Publication récente une',
+            'Publication récente deux',
+            'Publication récente trois',
+        ]);
+});
