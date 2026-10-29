@@ -6,6 +6,7 @@
     <p class="mt-2 text-gray-700">Auteur : {{ $auteur }}</p>
     <p class="mt-2 text-gray-700">Groupe : {{ $groupe }}</p>
     <p class="mt-6">
-        <a href="/heure" class="text-red-600 underline">Heure du serveur</a>
+        <a href="{{ route('home') }}" class="text-red-600 underline">Accueil</a> |
+        <a href="{{ route('time') }}" class="text-red-600 underline">Heure</a>
     </p>
 </x-layout>

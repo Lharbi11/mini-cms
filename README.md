@@ -6,24 +6,23 @@ Auteur : Rayen Harabi, groupe MDW33.
 
 Mini-CMS évoluera au fil du semestre vers une petite plateforme de publication : pages publiques, back-office authentifié, API JSON et tests Pest. Chaque session se termine par un tag Git (`lab-01`, `lab-01b`, puis un tag par session).
 
-## État actuel (session 04)
+## État actuel (tag lab-02)
 
-- Routes : `/`, `/heure`, `/a-propos`, `/posts`, les détails d'article par slug et les archives par année.
-- Les pages d'accueil et À propos sont servies par `PageController`; la liste des articles est servie par `PostController`; `/heure` reste une route closure.
-- Les articles sont temporairement stockés dans un tableau PHP, avant l'arrivée de la base de données en session 05.
-- Vues Blade : `home`, `a-propos` et `posts.index` utilisent le composant partagé `x-layout`; la vue `heure` reste autonome.
+- Routes nommées, toutes servies par des contrôleurs : `PageController` (pages) et `PostController` (articles).
+- Articles stockés dans un tableau PHP, sans base de données pour l'instant.
+- Layout Blade `<x-layout>` avec Tailwind chargé par Vite.
 - Base de données SQLite locale (`database/database.sqlite`, non versionnée).
 
 ## Routes disponibles
 
-| Méthode | URI | Réponse |
-|---|---|---|
-| GET | `/` | Vue `home`, servie par `PageController` |
-| GET | `/heure` | Vue `heure` avec l'heure (format H:i) et la date (format d/m/Y) |
-| GET | `/a-propos` | Vue `a-propos` avec le nom de l'auteur et le groupe, servie par `PageController` |
-| GET | `/posts` | Liste de trois articles stockés dans un tableau PHP, servie par `PostController` |
-| GET | `/posts/{slug}` | Détail d'un article identifié par son slug |
-| GET | `/posts/archive/{year}` | Articles filtrés par année (liste vide si aucune correspondance) |
+| Méthode | URI | Nom | Action |
+|---|---|---|---|
+| GET | `/` | `home` | `PageController@home` |
+| GET | `/a-propos` | `about` | `PageController@about` |
+| GET | `/heure` | `time` | `PageController@time` |
+| GET | `/posts` | `posts.index` | `PostController@index` |
+| GET | `/posts/archive/{year}` | `posts.archive` | `PostController@archive` |
+| GET | `/posts/{slug}` | `posts.show` | `PostController@show` |
 
 ## Prérequis
 
@@ -71,10 +70,6 @@ L'avant-dernière ligne de chaque bloc d'installation lance les migrations. Cett
 
 ![Page d'accueil de Mini-CMS](screenshots/s01-accueil.png)
 
-### Page Bienvenue
-
-![Page Bienvenue](screenshots/s01-bienvenue.png)
-
 ### Liste des routes
 
 ![Sortie de php artisan route:list](screenshots/s01-route-list.png)
@@ -82,3 +77,15 @@ L'avant-dernière ligne de chaque bloc d'installation lance les migrations. Cett
 ### Page À propos
 
 ![Page À propos](screenshots/s02-a-propos.png)
+
+### Accueil avec le layout
+
+![Page d'accueil avec le layout](screenshots/s03-accueil.png)
+
+### Liste des articles
+
+![Liste des articles](screenshots/s03-articles.png)
+
+### Détail d'un article
+
+![Détail d'un article](screenshots/s03-article.png)

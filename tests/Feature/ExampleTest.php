@@ -59,13 +59,17 @@ test('post routes return 404 for invalid years and unknown or invalid slugs', fu
     $this->get('/posts/article-inconnu')->assertNotFound();
 });
 
-test('the heure route displays the current time', function () {
+test('the named time route displays the current time in the shared layout', function () {
     $this->travelTo(now()->setDate(2025, 1, 1)->setTime(14, 30));
 
-    $this->get('/heure')
+    $this->get(route('time'))
         ->assertOk()
-        ->assertSeeText('14:30')
-        ->assertSeeText('01/01/2025');
+        ->assertSee('<title>Heure du serveur - Mini-CMS</title>', false)
+        ->assertSeeText('Il est 14:30, le 01/01/2025.')
+        ->assertSee('href="'.route('time').'"', false)
+        ->assertSee('href="'.route('home').'"', false)
+        ->assertSee('href="'.route('posts.index').'"', false)
+        ->assertSee('href="'.route('about').'"', false);
 });
 
 test('the about page displays the author and group', function () {
@@ -74,8 +78,11 @@ test('the about page displays the author and group', function () {
         ->assertSee('<title>À propos - Mini-CMS</title>', false)
         ->assertSeeText('rayen harabi')
         ->assertSeeText('MDW33')
+        ->assertSee('<a href="'.route('home').'" class="text-red-600 underline">Accueil</a> |', false)
+        ->assertSee('<a href="'.route('time').'" class="text-red-600 underline">Heure</a>', false)
         ->assertSee('href="'.route('home').'"', false)
         ->assertSee('href="'.route('posts.index').'"', false)
+        ->assertSee('href="'.route('time').'"', false)
         ->assertSee('href="'.route('about').'"', false)
         ->assertSee('Mini-CMS - Atelier Framework Côté Serveur');
 });
