@@ -1,17 +1,21 @@
 @props(['post'])
 
-<li {{ $attributes->class(['rounded border border-gray-200 bg-white p-4']) }}>
-    <div class="flex items-start justify-between gap-4">
-        <a href="{{ route('posts.show', $post['slug']) }}" class="text-xl font-medium text-red-600 hover:underline">
-            {{ $post['title'] }}
-        </a>
+<article {{ $attributes->class(['flex flex-col gap-3 rounded-lg border border-gray-200 bg-white p-5 shadow-sm']) }}>
+    <div class="flex items-center gap-2">
+        <h2 class="text-lg font-semibold text-gray-900">
+            <a href="{{ route('posts.show', $post['slug']) }}" class="hover:text-indigo-600">{{ $post['title'] }}</a>
+        </h2>
+
         @if ($post['featured'])
-            <span class="shrink-0 rounded bg-red-50 px-2 py-1 text-xs font-medium text-red-700">À la une</span>
+            <span class="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800">À la une</span>
         @endif
     </div>
-    <p class="mt-2 text-gray-700">{{ $post['excerpt'] }}</p>
-    <p class="mt-2 text-sm text-gray-500">
-        Par {{ $post['author'] }} · {{ $post['date'] }} ·
-        <a href="{{ route('posts.archive', $post['year']) }}" class="underline">{{ $post['year'] }}</a>
+
+    <p class="text-sm text-gray-600">{{ $post['excerpt'] }}</p>
+    <p class="text-xs text-gray-500">
+        {{ $post['author'] }} - {{ $post['date'] }} -
+        <a href="{{ route('posts.archive', $post['year']) }}" class="underline">Archive {{ $post['year'] }}</a>
     </p>
-</li>
+
+    <a href="{{ route('posts.show', $post['slug']) }}" class="text-sm font-medium text-indigo-600 hover:underline">Lire l'article</a>
+</article>

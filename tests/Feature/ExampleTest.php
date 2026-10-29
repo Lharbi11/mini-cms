@@ -24,20 +24,24 @@ test('the home page renders the shared layout and links to the about page', func
 });
 
 test('the posts page lists the in-memory articles and includes the shared navigation', function () {
-    $this->get(route('posts.index'))
-        ->assertOk()
+    $response = $this->get(route('posts.index'));
+
+    $response->assertOk()
         ->assertSee('<title>Tous les articles - Mini-CMS</title>', false)
         ->assertSeeText('Bienvenue sur Mini-CMS')
         ->assertSeeText('Comprendre le routage Laravel')
         ->assertSeeText('Les composants Blade')
         ->assertSeeText('Préparer la suite du projet')
         ->assertSeeText("Présentation du projet fil rouge de l'atelier et de ses objectifs.")
-        ->assertSeeText('Par Équipe Mini-CMS · 01/10/2026')
-        ->assertSeeText('À la une')
-        ->assertSeeText('01/10/2026')
+        ->assertSeeText('Équipe Mini-CMS - 01/10/2026')
+        ->assertSeeText('Archive 2026')
+        ->assertSeeText("Lire l'article")
         ->assertSee('href="'.route('posts.index').'"', false)
         ->assertSee('href="'.route('posts.show', 'bienvenue-sur-mini-cms').'"', false)
         ->assertSee('href="'.route('posts.archive', 2026).'"', false);
+
+    expect(substr_count($response->getContent(), '<article'))->toBe(4)
+        ->and(substr_count($response->getContent(), 'À la une'))->toBe(1);
 });
 
 test('the post detail displays the article matching its slug', function () {
@@ -68,8 +72,25 @@ test('the post archive filters articles by year and allows an empty year', funct
     $this->get(route('posts.archive', 2025))
         ->assertOk()
         ->assertSee('<title>Articles de 2025 - Mini-CMS</title>', false)
-        ->assertSeeText('Aucun article ne correspond à cette année.')
+        ->assertSeeText('Aucun article')
+        ->assertSeeText("Il n'y a pas encore d'article publié.")
+        ->assertSee('role="status"', false)
         ->assertDontSeeText('Bienvenue sur Mini-CMS');
+});
+
+test('the 2026 archive shows four article cards with the articles navigation active', function () {
+    $response = $this->get(route('posts.archive', 2026));
+
+    $response->assertOk()
+        ->assertSee('<title>Articles de 2026 - Mini-CMS</title>', false)
+        ->assertSeeInOrder([
+            'href="'.route('posts.index').'"',
+            'aria-current="page"',
+            'bg-indigo-600 text-white',
+            'Articles',
+        ], false);
+
+    expect(substr_count($response->getContent(), '<article'))->toBe(4);
 });
 
 test('post routes return 404 for invalid years and unknown or invalid slugs', function () {
