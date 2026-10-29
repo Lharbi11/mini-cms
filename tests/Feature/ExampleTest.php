@@ -59,6 +59,8 @@ test('the posts page lists database articles with pagination and shared navigati
         ->assertSeeText('Brouillon')
         ->assertSeeText('Showing 1 to 4 of 6 results')
         ->assertSeeText('Next')
+        ->assertSee('href="'.route('posts.create').'"', false)
+        ->assertSeeText('Nouvel article')
         ->assertSeeText('Archive 2026')
         ->assertSeeText("Lire l'article")
         ->assertSee('<h1 class="text-3xl font-bold text-gray-900">Tous les articles</h1>', false)
@@ -78,6 +80,145 @@ test('the posts page lists database articles with pagination and shared navigati
         ->assertDontSeeText('Showing 1 to 4 of 6 results');
 
     expect(substr_count($secondPage->getContent(), '<article'))->toBe(2);
+});
+
+test('the create form displays its fields and validation instructions', function () {
+    $this->get(route('posts.create'))
+        ->assertOk()
+        ->assertSee('<title>Nouvel article - Mini-CMS</title>', false)
+        ->assertSeeText('Chaque champ est vérifié par le serveur.')
+        ->assertSee('action="'.route('posts.store').'"', false)
+        ->assertSee('name="_token"', false)
+        ->assertSee('name="title"', false)
+        ->assertSee('name="slug"', false)
+        ->assertSee('name="body"', false)
+        ->assertSee('name="is_published"', false)
+        ->assertDontSee(' required', false);
+});
+
+test('the post form reports missing required fields without creating a post', function () {
+    $this->followingRedirects()
+        ->from(route('posts.create'))
+        ->post(route('posts.store'), [
+            'title' => '',
+            'slug' => '',
+            'body' => '',
+        ])
+        ->assertOk()
+        ->assertSeeText('Le formulaire contient des erreurs')
+        ->assertSeeText('The title field is required.')
+        ->assertSeeText('The slug field is required.')
+        ->assertSeeText('The body field is required.');
+
+    $this->assertDatabaseCount('posts', 0);
+});
+
+test('the post form preserves entered values after validation fails', function () {
+    $this->followingRedirects()
+        ->from(route('posts.create'))
+        ->post(route('posts.store'), [
+            'title' => 'A retained title',
+            'slug' => 'Invalid Slug',
+            'body' => 'A valid body with enough characters.',
+        ])
+        ->assertOk()
+        ->assertSee('value="A retained title"', false)
+        ->assertSee('value="Invalid Slug"', false)
+        ->assertSeeText('The slug field format is invalid.');
+});
+
+test('the post form rejects a duplicate slug with a clear error', function () {
+    Post::factory()->create(['slug' => 'existing-post']);
+
+    $this->from(route('posts.create'))
+        ->post(route('posts.store'), [
+            'title' => 'Another post',
+            'slug' => 'existing-post',
+            'body' => 'This body contains enough characters.',
+        ])
+        ->assertRedirect(route('posts.create'))
+        ->assertSessionHasErrors(['slug' => 'The slug has already been taken.']);
+
+    $this->assertDatabaseCount('posts', 1);
+});
+
+test('the post form rejects values that violate validation rules', function (array $invalidInput, string $field) {
+    Post::factory()->create(['slug' => 'existing-post']);
+
+    $validInput = [
+        'title' => 'A valid title',
+        'slug' => 'new-post',
+        'body' => 'This body contains enough characters.',
+        'is_published' => '1',
+    ];
+
+    $this->from(route('posts.create'))
+        ->post(route('posts.store'), array_merge($validInput, $invalidInput))
+        ->assertRedirect(route('posts.create'))
+        ->assertSessionHasErrors($field);
+
+    $this->assertDatabaseCount('posts', 1);
+})->with([
+    'title exceeding 255 characters' => [['title' => str_repeat('a', 256)], 'title'],
+    'slug containing uppercase characters' => [['slug' => 'Invalid-Slug'], 'slug'],
+    'body shorter than 20 characters' => [['body' => 'Too short'], 'body'],
+    'invalid publication checkbox value' => [['is_published' => 'sometimes'], 'is_published'],
+]);
+
+test('a valid published post is stored, shown, and listed using server-controlled publication time', function () {
+    $this->travelTo('2026-10-29 12:00:00');
+
+    $response = $this->post(route('posts.store'), [
+        'title' => 'Created from the browser',
+        'slug' => 'created-from-the-browser',
+        'body' => 'A sufficiently long article body with <script>alert(1)</script>.',
+        'is_published' => '1',
+        'published_at' => '2020-01-01 00:00:00',
+    ]);
+
+    $post = Post::where('slug', 'created-from-the-browser')->firstOrFail();
+
+    $response->assertRedirect(route('posts.show', $post));
+    $this->assertDatabaseHas('posts', [
+        'id' => $post->id,
+        'title' => 'Created from the browser',
+        'slug' => 'created-from-the-browser',
+        'is_published' => true,
+        'published_at' => '2026-10-29 12:00:00',
+    ]);
+
+    $this->get(route('posts.show', $post))
+        ->assertOk()
+        ->assertSeeText('Created from the browser')
+        ->assertSee('A sufficiently long article body with &lt;script&gt;alert(1)&lt;/script&gt;.', false)
+        ->assertDontSee('<script>alert(1)</script>', false);
+
+    $this->get(route('posts.index'))
+        ->assertOk()
+        ->assertSeeText('Created from the browser');
+});
+
+test('a post submitted without publication stays a draft without a publication date', function () {
+    $this->travelTo('2026-10-29 12:00:00');
+
+    $response = $this->post(route('posts.store'), [
+        'title' => 'A new draft',
+        'slug' => 'a-new-draft',
+        'body' => 'This draft body contains enough characters.',
+    ]);
+
+    $post = Post::where('slug', 'a-new-draft')->firstOrFail();
+
+    $response->assertRedirect(route('posts.show', $post));
+    $this->assertDatabaseHas('posts', [
+        'id' => $post->id,
+        'is_published' => false,
+        'published_at' => null,
+    ]);
+
+    $this->get(route('posts.show', $post))
+        ->assertOk()
+        ->assertSeeText('Brouillon');
 });
 
 test('the post detail resolves its model from the route and displays database attributes', function () {
