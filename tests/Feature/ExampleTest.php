@@ -43,6 +43,8 @@ test('the posts page lists the in-memory articles and includes the shared naviga
         ->assertSeeText('Équipe Mini-CMS - 01/10/2026')
         ->assertSeeText('Archive 2026')
         ->assertSeeText("Lire l'article")
+        ->assertSee('<h1 class="text-3xl font-bold text-gray-900">Tous les articles</h1>', false)
+        ->assertDontSeeText('Le projet Mini-CMS et ses objectifs.')
         ->assertSee('href="'.route('posts.index').'"', false)
         ->assertSee('href="'.route('posts.show', 'bienvenue-sur-mini-cms').'"', false)
         ->assertSee('href="'.route('posts.archive', 2026).'"', false);
@@ -86,6 +88,8 @@ test('the post archive filters articles by year and allows an empty year', funct
         ->assertSee('<title>Articles de 2025 - Mini-CMS</title>', false)
         ->assertSeeText('Aucun article')
         ->assertSeeText("Il n'y a pas encore d'article publié.")
+        ->assertSee('<h1 class="text-3xl font-bold text-gray-900">Articles de 2025</h1>', false)
+        ->assertDontSeeText('Le projet Mini-CMS et ses objectifs.')
         ->assertSee('role="status"', false)
         ->assertDontSeeText('Bienvenue sur Mini-CMS');
 });
@@ -129,6 +133,8 @@ test('the about page displays the author and group', function () {
     $this->get('/a-propos')
         ->assertOk()
         ->assertSee('<title>À propos - Mini-CMS</title>', false)
+        ->assertSee('<h1 class="text-3xl font-bold text-gray-900">À propos</h1>', false)
+        ->assertSeeText('Le projet Mini-CMS et ses objectifs.')
         ->assertSeeText('Projet pédagogique')
         ->assertSeeText("Ce site évolue à chaque session : les pages que vous voyez aujourd'hui seront reliées à une base de données dans la suite du cours.")
         ->assertSeeText('Données provisoires')
