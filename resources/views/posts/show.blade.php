@@ -21,6 +21,13 @@
         <div class="whitespace-pre-line leading-relaxed text-gray-800">{{ $post->body }}</div>
 
         <div class="mt-8 flex flex-wrap items-start gap-4">
+            <form method="POST" action="{{ route('posts.publication', $post) }}">
+                @csrf
+                @method('PATCH')
+
+                <button type="submit" class="rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700">{{ $post->is_published ? 'Dépublier' : 'Publier' }}</button>
+            </form>
+
             <a href="{{ route('posts.edit', $post) }}" class="rounded-md border border-indigo-600 px-4 py-2 text-sm font-medium text-indigo-600 hover:bg-indigo-50">Modifier</a>
 
             <details>

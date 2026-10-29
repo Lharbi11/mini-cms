@@ -88,3 +88,56 @@ it('deletes a post', function () {
 
     $this->assertDatabaseMissing('posts', ['id' => $post->id]);
 });
+
+it('publishes a draft and sets its publication date', function () {
+    $this->travelTo('2026-10-29 12:00:00');
+
+    $post = Post::create(postData());
+
+    $this->get(route('posts.show', $post))
+        ->assertOk()
+        ->assertSee('action="'.route('posts.publication', $post).'"', false)
+        ->assertSee('name="_method" value="PATCH"', false)
+        ->assertSeeText('Publier')
+        ->assertDontSeeText('Dépublier');
+
+    $this->patch(route('posts.publication', $post))
+        ->assertRedirect(route('posts.show', $post));
+
+    $this->assertDatabaseHas('posts', [
+        'id' => $post->id,
+        'is_published' => true,
+        'published_at' => '2026-10-29 12:00:00',
+    ]);
+
+    $this->get(route('posts.show', $post))
+        ->assertOk()
+        ->assertSeeText('Dépublier')
+        ->assertDontSeeText('Publier');
+});
+
+it('unpublishes a post and clears its publication date', function () {
+    $post = Post::create(postData([
+        'is_published' => true,
+        'published_at' => '2026-10-20 09:30:00',
+    ]));
+
+    $this->get(route('posts.show', $post))
+        ->assertOk()
+        ->assertSeeText('Dépublier')
+        ->assertDontSeeText('Publier');
+
+    $this->patch(route('posts.publication', $post))
+        ->assertRedirect(route('posts.show', $post));
+
+    $this->assertDatabaseHas('posts', [
+        'id' => $post->id,
+        'is_published' => false,
+        'published_at' => null,
+    ]);
+
+    $this->get(route('posts.show', $post))
+        ->assertOk()
+        ->assertSeeText('Publier')
+        ->assertDontSeeText('Dépublier');
+});
