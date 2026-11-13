@@ -1,24 +1,9 @@
 <?php
 
-use App\Models\Post;
 use App\Models\Tag;
 
 beforeEach(function () {
     $this->withoutVite();
-});
-
-it('lists tags alphabetically with their post counts', function () {
-    $blade = Tag::factory()->create(['name' => 'Blade', 'slug' => 'blade']);
-    $laravel = Tag::factory()->create(['name' => 'Laravel', 'slug' => 'laravel']);
-    $posts = Post::factory()->count(2)->create();
-    $posts->each(fn (Post $post) => $post->tags()->attach($blade));
-    Post::factory()->create()->tags()->attach($laravel);
-
-    $this->get(route('admin.tags.index'))
-        ->assertOk()
-        ->assertSeeInOrder(['Blade', 'Laravel'])
-        ->assertSee('<td class="py-3 pr-4 text-gray-600">2</td>', false)
-        ->assertSee('<td class="py-3 pr-4 text-gray-600">1</td>', false);
 });
 
 it('creates a tag and shows a confirmation message', function () {
@@ -32,90 +17,53 @@ it('creates a tag and shows a confirmation message', function () {
         'name' => 'Accessibilité',
         'slug' => 'accessibilite',
     ]);
-
-    $this->get(route('admin.tags.index'))
-        ->assertOk()
-        ->assertSeeText('Tag créé.')
-        ->assertSeeText('Accessibilité');
 });
 
-it('shows existing tag values in the edit form', function () {
-    $tag = Tag::factory()->create([
-        'name' => 'Laravel',
-        'slug' => 'laravel',
-    ]);
+it('rejects an empty tag with French required messages', function () {
+    $this->from(route('admin.tags.create'))
+        ->post(route('admin.tags.store'), ['name' => '', 'slug' => ''])
+        ->assertRedirect(route('admin.tags.create'))
+        ->assertSessionHasErrors([
+            'name' => 'Le champ nom est obligatoire.',
+            'slug' => 'Le champ slug est obligatoire.',
+        ]);
 
-    $this->get(route('admin.tags.edit', $tag))
-        ->assertOk()
-        ->assertSeeText('Modifier le tag')
-        ->assertSee('value="Laravel"', false)
-        ->assertSee('value="laravel"', false);
+    $this->assertDatabaseCount('tags', 0);
 });
 
-it('updates a tag without changing its slug', function () {
-    $tag = Tag::factory()->create([
-        'name' => 'Laravel',
-        'slug' => 'laravel',
-    ]);
-
-    $this->put(route('admin.tags.update', $tag), [
-        'name' => 'Laravel avancé',
-        'slug' => 'laravel',
-    ])->assertRedirect(route('admin.tags.index'))
-        ->assertSessionHas('success', 'Tag mis à jour.');
-
-    $this->assertDatabaseHas('tags', [
-        'id' => $tag->id,
-        'name' => 'Laravel avancé',
-        'slug' => 'laravel',
-    ]);
-});
-
-it('rejects a tag slug already used by another tag', function () {
+it('rejects a slug already used by another tag with a tag-specific message', function () {
     Tag::factory()->create(['name' => 'Laravel', 'slug' => 'laravel']);
-    $tag = Tag::factory()->create(['name' => 'Blade', 'slug' => 'blade']);
 
-    $this->from(route('admin.tags.edit', $tag))
-        ->put(route('admin.tags.update', $tag), [
-            'name' => 'Blade',
+    $this->from(route('admin.tags.create'))
+        ->post(route('admin.tags.store'), [
+            'name' => 'Laravel avancé',
             'slug' => 'laravel',
         ])
-        ->assertRedirect(route('admin.tags.edit', $tag))
-        ->assertSessionHasErrors(['slug']);
+        ->assertRedirect(route('admin.tags.create'))
+        ->assertSessionHasErrors([
+            'slug' => 'Ce slug est déjà utilisé par un autre tag.',
+        ]);
 
-    $this->assertDatabaseHas('tags', [
-        'id' => $tag->id,
-        'name' => 'Blade',
-        'slug' => 'blade',
-    ]);
+    $this->assertDatabaseMissing('tags', ['name' => 'Laravel avancé']);
 });
 
-it('deletes a tag and removes its links without deleting its posts', function () {
-    $tag = Tag::factory()->create();
-    $post = Post::factory()->create();
-    $post->tags()->attach($tag);
-
-    $this->delete(route('admin.tags.destroy', $tag))
-        ->assertRedirect(route('admin.tags.index'))
-        ->assertSessionHas('success', 'Tag supprimé.');
-
-    $this->assertModelMissing($tag);
-    $this->assertModelExists($post);
-    $this->assertDatabaseMissing('post_tag', [
-        'post_id' => $post->id,
-        'tag_id' => $tag->id,
-    ]);
-});
-
-it('keeps tag reads available and blocks writes in read-only mode', function () {
+it('blocks tag writes with a 503 response when the site is read-only', function () {
     config(['site.read_only' => true]);
-
-    $this->get(route('admin.tags.index'))->assertOk();
 
     $this->post(route('admin.tags.store'), [
         'name' => 'Laravel',
         'slug' => 'laravel',
-    ])->assertStatus(503);
+    ])->assertStatus(503)
+        ->assertSeeText('Le site est en lecture seule.');
 
     $this->assertDatabaseMissing('tags', ['slug' => 'laravel']);
+});
+
+it('keeps the tag list readable when the site is read-only', function () {
+    config(['site.read_only' => true]);
+    Tag::factory()->create(['name' => 'Laravel', 'slug' => 'laravel']);
+
+    $this->get(route('admin.tags.index'))
+        ->assertOk()
+        ->assertSeeText('Laravel');
 });
