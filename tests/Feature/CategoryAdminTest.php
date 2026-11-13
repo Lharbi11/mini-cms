@@ -114,7 +114,12 @@ it('keeps category reads available and blocks writes in read-only mode', functio
     $this->post(route('admin.categories.store'), [
         'name' => 'Laravel',
         'slug' => 'laravel',
-    ])->assertStatus(503);
+    ])->assertStatus(503)
+        ->assertSeeText('Service momentanément indisponible')
+        ->assertSeeText('Le site est en lecture seule.')
+        ->assertSee('aria-label="Navigation principale"', false)
+        ->assertSee('href="'.route('home').'"', false)
+        ->assertSeeText("Retour à l'accueil");
 
     $this->assertDatabaseMissing('categories', ['slug' => 'laravel']);
 });

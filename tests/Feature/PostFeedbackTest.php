@@ -41,7 +41,11 @@ it('shows the custom page for an unknown post', function () {
 it('keeps the standard 404 page for an unknown category', function () {
     $this->get('/posts/categorie/inconnue')
         ->assertNotFound()
-        ->assertDontSee('Article introuvable');
+        ->assertDontSee('Article introuvable')
+        ->assertSeeText('Page introuvable')
+        ->assertSee('aria-label="Navigation principale"', false)
+        ->assertSee('href="'.route('home').'"', false)
+        ->assertSeeText("Retour à l'accueil");
 });
 
 it('shows the read-only banner only when the site is read-only', function () {
