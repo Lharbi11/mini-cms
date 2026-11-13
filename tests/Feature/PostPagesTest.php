@@ -58,17 +58,27 @@ it('shows a message when there is no post', function () {
 });
 
 it('shows a single post', function () {
-    $post = Post::create([
-        'title' => 'Article complet',
-        'slug' => 'article-complet',
-        'body' => 'Texte complet de cet article de test.',
-        'is_published' => true,
-        'published_at' => now(),
-    ]);
+    $user = User::factory()->create(['name' => 'Auteur du détail']);
+    $category = Category::factory()->create(['name' => 'Catégorie du détail']);
+    $tag = Tag::factory()->create(['name' => 'Tag du détail']);
+    $post = Post::factory()
+        ->for($user)
+        ->for($category)
+        ->published()
+        ->create([
+            'title' => 'Article complet',
+            'slug' => 'article-complet',
+            'body' => 'Texte complet de cet article de test.',
+        ]);
+
+    $post->tags()->attach($tag);
 
     $this->get(route('posts.show', $post))
         ->assertOk()
-        ->assertSee('Texte complet de cet article de test.');
+        ->assertSee('Texte complet de cet article de test.')
+        ->assertSeeText('Catégorie du détail')
+        ->assertSeeText('Auteur du détail')
+        ->assertSeeText('Tag du détail');
 });
 
 it('deletes a post after presenting a confirmation form', function () {
