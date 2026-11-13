@@ -137,3 +137,83 @@ it('counts only published posts for each category on the home page', function ()
         fn (Category $category) => ! $category->relationLoaded('posts')
     ));
 });
+
+it('lists only published posts associated with a tag resolved by its slug', function () {
+    $tag = Tag::factory()->create([
+        'name' => 'Astuce',
+        'slug' => 'astuce',
+    ]);
+    $published = Post::factory()->published()->create([
+        'title' => 'Astuce publiée',
+    ]);
+    $draft = Post::factory()->create([
+        'title' => 'Astuce en brouillon',
+    ]);
+    $published->tags()->attach($tag);
+    $draft->tags()->attach($tag);
+    Post::factory()->published()->create([
+        'title' => 'Article sans ce tag',
+    ]);
+
+    $this->get('/posts/tag/astuce')
+        ->assertOk()
+        ->assertSeeText('Tag : Astuce')
+        ->assertSeeText('Astuce publiée')
+        ->assertDontSeeText('Astuce en brouillon')
+        ->assertDontSeeText('Article sans ce tag')
+        ->assertSee('href="'.route('posts.tag', 'astuce').'"', false);
+});
+
+it('returns 404 for an unknown tag slug', function () {
+    $this->get('/posts/tag/inconnu')->assertNotFound();
+});
+
+it('shows only tags with published posts on the home page in popularity order', function () {
+    $popular = Tag::factory()->create([
+        'name' => 'Populaire',
+        'slug' => 'populaire',
+    ]);
+    $alsoPopular = Tag::factory()->create([
+        'name' => 'Autre populaire',
+        'slug' => 'autre-populaire',
+    ]);
+    $tiedPopular = Tag::factory()->create([
+        'name' => 'Beta populaire',
+        'slug' => 'beta-populaire',
+    ]);
+    $hidden = Tag::factory()->create([
+        'name' => 'Invisible',
+        'slug' => 'invisible',
+    ]);
+
+    $popularPosts = Post::factory(2)->published()->create();
+    $popularPosts->each(
+        fn (Post $post) => $post->tags()->attach($popular)
+    );
+    $alsoPopularPost = Post::factory()->published()->create();
+    $alsoPopularPost->tags()->attach($alsoPopular);
+    $tiedPopularPost = Post::factory()->published()->create();
+    $tiedPopularPost->tags()->attach($tiedPopular);
+    Post::factory()->create()->tags()->attach($hidden);
+
+    $this->get(route('home'))
+        ->assertOk()
+        ->assertSeeText('Populaire (2)')
+        ->assertSeeText('Autre populaire (1)')
+        ->assertSeeText('Beta populaire (1)')
+        ->assertDontSeeText('Invisible')
+        ->assertSeeInOrder([
+            'Populaire (2)',
+            'Autre populaire (1)',
+            'Beta populaire (1)',
+        ])
+        ->assertSee('href="'.route('posts.tag', 'populaire').'"', false);
+
+    $popularPosts
+        ->push($alsoPopularPost, $tiedPopularPost)
+        ->each(fn (Post $post) => $post->update(['is_published' => false]));
+
+    $this->get(route('home'))
+        ->assertOk()
+        ->assertDontSeeText('Tags populaires');
+});

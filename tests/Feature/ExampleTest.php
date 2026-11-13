@@ -29,7 +29,7 @@ test('the home page renders the shared layout and links to the about page', func
             'bg-indigo-600 text-white',
             'Accueil',
         ], false)
-        ->assertSee('resources/css/app.css', false);
+        ->assertSee('/build/assets/app-', false);
 });
 
 test('the posts page lists database articles with pagination and shared navigation', function () {
