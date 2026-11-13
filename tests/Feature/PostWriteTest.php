@@ -130,7 +130,7 @@ it('rejects a non-array tag selection without breaking the form', function () {
         ->followingRedirects()
         ->post(route('posts.store'), postData(['tags' => 'invalid']))
         ->assertOk()
-        ->assertSeeText('The tags field must be an array.');
+        ->assertSeeText('Le champ tags doit être une liste.');
 
     $this->assertDatabaseMissing('posts', ['slug' => 'article-de-test']);
 });
@@ -148,7 +148,7 @@ it('does not create a post without a title', function () {
     $this->from(route('posts.create'))
         ->post(route('posts.store'), postData(['title' => '']))
         ->assertRedirect(route('posts.create'))
-        ->assertSessionHasErrors(['title' => 'The title field is required.']);
+        ->assertSessionHasErrors(['title' => 'Le champ titre est obligatoire.']);
 
     $this->assertDatabaseMissing('posts', ['slug' => 'article-de-test']);
 });
@@ -274,7 +274,7 @@ it('refuses the slug of another post', function () {
     $this->from(route('posts.edit', $post))
         ->put(route('posts.update', $post), postData(['slug' => 'slug-deja-pris']))
         ->assertRedirect(route('posts.edit', $post))
-        ->assertSessionHasErrors(['slug' => 'The slug has already been taken.']);
+        ->assertSessionHasErrors(['slug' => 'La valeur du champ slug est déjà utilisée.']);
 
     $this->assertDatabaseHas('posts', [
         'id' => $post->id,

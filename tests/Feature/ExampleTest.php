@@ -174,7 +174,7 @@ test('an update rejects another post slug and preserves the existing post', func
         ])
         ->assertRedirect(route('posts.edit', $post))
         ->assertSessionHasErrors([
-            'slug' => 'The slug has already been taken.',
+            'slug' => 'La valeur du champ slug est déjà utilisée.',
         ]);
 
     $this->assertDatabaseHas('posts', [
@@ -207,7 +207,7 @@ test('an invalid update keeps the unchecked publication value and does not chang
             'is_published' => '0',
         ])
         ->assertOk()
-        ->assertSeeText('The title field is required.')
+        ->assertSeeText('Le champ titre est obligatoire.')
         ->assertSee('value=""', false)
         ->assertDontSee('name="is_published" value="1" checked', false);
 
@@ -229,9 +229,9 @@ test('the post form reports missing required fields without creating a post', fu
         ])
         ->assertOk()
         ->assertSeeText('Le formulaire contient des erreurs')
-        ->assertSeeText('The title field is required.')
-        ->assertSeeText('The slug field is required.')
-        ->assertSeeText('The body field is required.');
+        ->assertSeeText('Le champ titre est obligatoire.')
+        ->assertSeeText('Le champ slug est obligatoire.')
+        ->assertSeeText('Le champ contenu est obligatoire.');
 
     $this->assertDatabaseCount('posts', 0);
 });
@@ -249,7 +249,7 @@ test('the post form preserves entered values after validation fails', function (
         ->assertSee('value="A retained title"', false)
         ->assertSee('value="Invalid Slug"', false)
         ->assertSee('value="A retained excerpt"', false)
-        ->assertSeeText('The slug field format is invalid.');
+        ->assertSeeText('Le format du champ slug est invalide.');
 });
 
 test('the post form rejects a duplicate slug with a clear error', function () {
@@ -262,7 +262,7 @@ test('the post form rejects a duplicate slug with a clear error', function () {
             'body' => 'This body contains enough characters.',
         ])
         ->assertRedirect(route('posts.create'))
-        ->assertSessionHasErrors(['slug' => 'The slug has already been taken.']);
+        ->assertSessionHasErrors(['slug' => 'La valeur du champ slug est déjà utilisée.']);
 
     $this->assertDatabaseCount('posts', 1);
 });
@@ -301,7 +301,7 @@ test('the post form rejects excerpts longer than 255 characters', function () {
         ])
         ->assertRedirect(route('posts.create'))
         ->assertSessionHasErrors([
-            'excerpt' => 'The excerpt field must not be greater than 255 characters.',
+            'excerpt' => 'Le champ extrait ne doit pas dépasser 255 caractères.',
         ]);
 
     $this->assertDatabaseCount('posts', 0);

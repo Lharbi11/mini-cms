@@ -118,3 +118,29 @@ it('keeps category reads available and blocks writes in read-only mode', functio
 
     $this->assertDatabaseMissing('categories', ['slug' => 'laravel']);
 });
+
+it('uses French field labels for required category fields', function () {
+    $this->from(route('admin.categories.create'))
+        ->post(route('admin.categories.store'), [])
+        ->assertRedirect(route('admin.categories.create'))
+        ->assertSessionHasErrors([
+            'name' => 'Le champ nom est obligatoire.',
+            'slug' => 'Le champ slug est obligatoire.',
+        ]);
+});
+
+it('uses a category-specific message for a duplicate slug', function () {
+    Category::factory()->create(['name' => 'Laravel', 'slug' => 'laravel']);
+
+    $this->from(route('admin.categories.create'))
+        ->post(route('admin.categories.store'), [
+            'name' => 'Laravel avancé',
+            'slug' => 'laravel',
+        ])
+        ->assertRedirect(route('admin.categories.create'))
+        ->assertSessionHasErrors([
+            'slug' => 'Ce slug est déjà utilisé par une autre catégorie.',
+        ]);
+
+    $this->assertDatabaseMissing('categories', ['name' => 'Laravel avancé']);
+});
