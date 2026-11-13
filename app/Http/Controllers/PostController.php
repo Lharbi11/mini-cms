@@ -38,6 +38,18 @@ class PostController extends Controller
         ]);
     }
 
+    public function byCategory(Category $category): View
+    {
+        return view('posts.index', [
+            'heading' => 'Catégorie : '.$category->name,
+            'posts' => $category->posts()
+                ->published()
+                ->with('user', 'category', 'tags')
+                ->latest('published_at')
+                ->paginate(4),
+        ]);
+    }
+
     /**
      * Show the form for creating a new resource.
      */

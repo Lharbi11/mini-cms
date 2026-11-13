@@ -39,7 +39,51 @@ it('shows a post category, author, and tags on its card', function () {
         ->assertOk()
         ->assertSeeText('Catégorie associée')
         ->assertSeeText('Auteure associée')
-        ->assertSeeText('Tag associé');
+        ->assertSeeText('Tag associé')
+        ->assertSee('href="'.route('posts.category', $category).'"', false);
+});
+
+it('lists only published posts from a category by publication date with pagination', function () {
+    $category = Category::factory()->create([
+        'name' => 'Laravel',
+        'slug' => 'laravel',
+    ]);
+
+    foreach (range(1, 5) as $day) {
+        Post::factory()->published()->for($category)->create([
+            'title' => 'Article Laravel '.$day,
+            'published_at' => '2026-11-'.str_pad((string) $day, 2, '0', STR_PAD_LEFT).' 12:00:00',
+        ]);
+    }
+
+    Post::factory()->for($category)->create(['title' => 'Brouillon Laravel']);
+    Post::factory()->published()->create(['title' => 'Article autre catégorie']);
+
+    $firstPage = $this->get(route('posts.category', $category));
+
+    $firstPage->assertOk()
+        ->assertSeeText('Catégorie : Laravel')
+        ->assertSeeInOrder([
+            'Article Laravel 5',
+            'Article Laravel 4',
+            'Article Laravel 3',
+            'Article Laravel 2',
+        ])
+        ->assertDontSeeText('Brouillon Laravel')
+        ->assertDontSeeText('Article autre catégorie')
+        ->assertSeeText('Showing 1 to 4 of 5 results')
+        ->assertSee('href="'.route('posts.category', $category).'?page=2', false);
+
+    $this->get(route('posts.category', ['category' => $category->slug, 'page' => 2]))
+        ->assertOk()
+        ->assertSeeText('Article Laravel 1')
+        ->assertDontSeeText('Article Laravel 2')
+        ->assertDontSeeText('Brouillon Laravel')
+        ->assertDontSeeText('Article autre catégorie');
+});
+
+it('returns 404 for an unknown category slug', function () {
+    $this->get('/posts/categorie/inconnue')->assertNotFound();
 });
 
 it('shows fallback labels when a post has no category or author', function () {
