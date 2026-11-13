@@ -83,7 +83,9 @@ it('lists only published posts from a category by publication date with paginati
 });
 
 it('returns 404 for an unknown category slug', function () {
-    $this->get('/posts/categorie/inconnue')->assertNotFound();
+    $this->get('/posts/categorie/inconnue')
+        ->assertNotFound()
+        ->assertDontSeeText('Article introuvable');
 });
 
 it('shows fallback labels when a post has no category or author', function () {
@@ -148,7 +150,11 @@ it('deletes a post after presenting a confirmation form', function () {
 });
 
 it('returns 404 for an unknown post', function () {
-    $this->get('/posts/999')->assertNotFound();
+    $this->get('/posts/999')
+        ->assertNotFound()
+        ->assertSeeText('Article introuvable')
+        ->assertSeeText("Cet article n'existe pas ou a été supprimé.")
+        ->assertSee('href="'.route('posts.index').'"', false);
 });
 
 it('shows the create form', function () {
