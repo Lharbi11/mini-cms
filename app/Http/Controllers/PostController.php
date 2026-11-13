@@ -17,7 +17,7 @@ class PostController extends Controller
     {
         return view('posts.index', [
             'heading' => 'Tous les articles',
-            'posts' => Post::with(['category', 'user', 'tags'])
+            'posts' => Post::with('user', 'category', 'tags')
                 ->latest('id')
                 ->paginate(4),
         ]);
@@ -27,7 +27,7 @@ class PostController extends Controller
     {
         return view('posts.index', [
             'heading' => 'Articles de '.$year,
-            'posts' => Post::with(['category', 'user', 'tags'])
+            'posts' => Post::with('user', 'category', 'tags')
                 ->published()
                 ->whereYear('published_at', $year)
                 ->latest('id')
