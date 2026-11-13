@@ -213,3 +213,53 @@ it('shows only the three most recently published posts on the home page', functi
             'Publication récente trois',
         ]);
 });
+
+it('shows published post counts for categories without loading their posts', function () {
+    $laravel = Category::factory()->create([
+        'name' => 'Laravel',
+        'slug' => 'laravel',
+    ]);
+    $php = Category::factory()->create([
+        'name' => 'PHP',
+        'slug' => 'php',
+    ]);
+
+    Post::factory()->published()->for($laravel)->create([
+        'title' => 'Article Laravel publié 1',
+    ]);
+    Post::factory()->published()->for($laravel)->create([
+        'title' => 'Article Laravel publié 2',
+    ]);
+    Post::factory()->for($laravel)->create([
+        'title' => 'Article Laravel en brouillon',
+    ]);
+    Post::factory()->for($php)->create();
+
+    $response = $this->get(route('home'));
+
+    $response->assertOk()
+        ->assertSeeText('Laravel (2)')
+        ->assertSeeText('PHP (0)')
+        ->assertSee('href="'.route('posts.category', 'laravel').'"', false)
+        ->assertSeeInOrder([
+            'Laravel (2)',
+            'PHP (0)',
+        ]);
+
+    $response->assertViewHas('categories', function ($categories) {
+        return $categories->mapWithKeys(
+            fn (Category $category) => [$category->slug => $category->posts_count]
+        )->all() === [
+            'laravel' => 2,
+            'php' => 0,
+        ] && $categories->every(
+            fn (Category $category) => ! $category->relationLoaded('posts')
+        );
+    });
+
+    $this->get(route('posts.category', 'laravel'))
+        ->assertOk()
+        ->assertSeeText('Article Laravel publié 1')
+        ->assertSeeText('Article Laravel publié 2')
+        ->assertDontSeeText('Article Laravel en brouillon');
+});
