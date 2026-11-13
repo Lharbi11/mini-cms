@@ -24,7 +24,17 @@ it('creates a post from the form', function () {
 
     $post = Post::where('slug', 'article-de-test')->firstOrFail();
 
-    $response->assertRedirect(route('posts.show', $post));
+    $response
+        ->assertRedirect(route('posts.show', $post))
+        ->assertSessionHas('success', 'Article créé.');
+
+    $this->get(route('posts.show', $post))
+        ->assertOk()
+        ->assertSee('role="status"', false)
+        ->assertSeeText('Article créé.');
+
+    $this->get(route('posts.show', $post))
+        ->assertDontSeeText('Article créé.');
     $this->assertDatabaseHas('posts', [
         'id' => $post->id,
         'title' => 'Article de test',
@@ -246,7 +256,8 @@ it('updates a post and keeps its own slug', function () {
     $post = Post::create(postData());
 
     $this->put(route('posts.update', $post), postData(['title' => 'Titre modifié']))
-        ->assertRedirect(route('posts.show', $post));
+        ->assertRedirect(route('posts.show', $post))
+        ->assertSessionHas('success', 'Article mis à jour.');
 
     $this->assertDatabaseHas('posts', [
         'id' => $post->id,
@@ -276,7 +287,8 @@ it('deletes a post', function () {
     $post = Post::create(postData());
 
     $this->delete(route('posts.destroy', $post))
-        ->assertRedirect(route('posts.index'));
+        ->assertRedirect(route('posts.index'))
+        ->assertSessionHas('success', 'Article supprimé.');
 
     $this->assertDatabaseMissing('posts', ['id' => $post->id]);
 });
@@ -294,7 +306,8 @@ it('publishes a draft and sets its publication date', function () {
         ->assertDontSeeText('Dépublier');
 
     $this->patch(route('posts.publication', $post))
-        ->assertRedirect(route('posts.show', $post));
+        ->assertRedirect(route('posts.show', $post))
+        ->assertSessionHas('success', 'Article publié.');
 
     $this->assertDatabaseHas('posts', [
         'id' => $post->id,
@@ -320,7 +333,8 @@ it('unpublishes a post and clears its publication date', function () {
         ->assertDontSeeText('Publier');
 
     $this->patch(route('posts.publication', $post))
-        ->assertRedirect(route('posts.show', $post));
+        ->assertRedirect(route('posts.show', $post))
+        ->assertSessionHas('success', 'Article dépublié.');
 
     $this->assertDatabaseHas('posts', [
         'id' => $post->id,
