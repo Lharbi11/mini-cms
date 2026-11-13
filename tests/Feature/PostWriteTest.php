@@ -347,3 +347,23 @@ it('unpublishes a post and clears its publication date', function () {
         ->assertSeeText('Publier')
         ->assertDontSeeText('Dépublier');
 });
+
+it('allows read requests but rejects post writes when the site is read-only', function () {
+    $post = Post::create(postData());
+    config(['site.read_only' => true]);
+
+    $this->get(route('posts.index'))->assertOk();
+    $this->get(route('posts.edit', $post))->assertOk();
+
+    $this->post(route('posts.store'), postData(['slug' => 'article-nouveau']))
+        ->assertStatus(503);
+    $this->put(route('posts.update', $post), postData(['title' => 'Titre modifié']))
+        ->assertStatus(503);
+    $this->patch(route('posts.publication', $post))
+        ->assertStatus(503);
+    $this->delete(route('posts.destroy', $post))
+        ->assertStatus(503);
+
+    $this->assertDatabaseMissing('posts', ['slug' => 'article-nouveau']);
+    $this->assertDatabaseHas('posts', ['id' => $post->id, 'title' => 'Article de test']);
+});

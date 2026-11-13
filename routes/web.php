@@ -20,6 +20,8 @@ Route::get('/posts/categorie/{category:slug}', [PostController::class, 'byCatego
 Route::get('/posts/tag/{tag:slug}', [PostController::class, 'byTag'])
     ->name('posts.tag');
 
-Route::resource('posts', PostController::class);
-Route::patch('/posts/{post}/publication', [PostController::class, 'togglePublication'])
-    ->name('posts.publication');
+Route::middleware('writable')->group(function () {
+    Route::resource('posts', PostController::class);
+    Route::patch('/posts/{post}/publication', [PostController::class, 'togglePublication'])
+        ->name('posts.publication');
+});
