@@ -34,12 +34,12 @@ test('the home page renders the shared layout and links to the about page', func
 
 test('the posts page lists database articles with pagination and shared navigation', function () {
     Post::factory()->count(6)->sequence(
-        ['title' => 'Article de test 4', 'slug' => 'article-de-test-4', 'body' => 'Corps de test 4', 'is_published' => true, 'published_at' => '2026-10-04'],
-        ['title' => 'Article de test 3', 'slug' => 'article-de-test-3', 'body' => 'Corps de test 3'],
-        ['title' => 'Article de test 2', 'slug' => 'article-de-test-2', 'body' => 'Corps de test 2', 'is_published' => true, 'published_at' => '2026-10-02'],
-        ['title' => 'Article de test 1', 'slug' => 'article-de-test-1', 'body' => 'Corps de test 1'],
-        ['title' => 'Les migrations Laravel', 'slug' => 'les-migrations-laravel', 'body' => 'Les migrations créent les tables.'],
-        ['title' => 'Bienvenue sur Mini-CMS', 'slug' => 'bienvenue-sur-mini-cms', 'body' => 'Présentation du projet Mini-CMS.', 'is_published' => true, 'published_at' => '2026-10-01'],
+        ['title' => 'Article de test 4', 'slug' => 'article-de-test-4', 'excerpt' => null, 'body' => 'Corps de test 4', 'is_published' => true, 'published_at' => '2026-10-04'],
+        ['title' => 'Article de test 3', 'slug' => 'article-de-test-3', 'excerpt' => null, 'body' => 'Corps de test 3'],
+        ['title' => 'Article de test 2', 'slug' => 'article-de-test-2', 'excerpt' => null, 'body' => 'Corps de test 2', 'is_published' => true, 'published_at' => '2026-10-02'],
+        ['title' => 'Article de test 1', 'slug' => 'article-de-test-1', 'excerpt' => null, 'body' => 'Corps de test 1'],
+        ['title' => 'Les migrations Laravel', 'slug' => 'les-migrations-laravel', 'excerpt' => null, 'body' => 'Les migrations créent les tables.'],
+        ['title' => 'Bienvenue sur Mini-CMS', 'slug' => 'bienvenue-sur-mini-cms', 'excerpt' => null, 'body' => 'Présentation du projet Mini-CMS.', 'is_published' => true, 'published_at' => '2026-10-01'],
     )->create();
 
     $response = $this->get(route('posts.index'));
