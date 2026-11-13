@@ -1,6 +1,9 @@
 <?php
 
+use App\Models\Category;
 use App\Models\Post;
+use App\Models\Tag;
+use App\Models\User;
 
 beforeEach(function () {
     $this->withoutVite();
@@ -19,6 +22,33 @@ it('shows the posts list', function () {
         ->assertOk()
         ->assertSee('Premier article')
         ->assertSee('Contenu du premier article de test.');
+});
+
+it('shows a post category, author, and tags on its card', function () {
+    $user = User::factory()->create(['name' => 'Auteure associée']);
+    $category = Category::factory()->create(['name' => 'Catégorie associée']);
+    $tag = Tag::factory()->create(['name' => 'Tag associé']);
+    $post = Post::factory()
+        ->for($user)
+        ->for($category)
+        ->create(['title' => 'Article avec relations']);
+
+    $post->tags()->attach($tag);
+
+    $this->get(route('posts.index'))
+        ->assertOk()
+        ->assertSeeText('Catégorie associée')
+        ->assertSeeText('Auteure associée')
+        ->assertSeeText('Tag associé');
+});
+
+it('shows fallback labels when a post has no category or author', function () {
+    Post::factory()->create(['title' => 'Article sans relations']);
+
+    $this->get(route('posts.index'))
+        ->assertOk()
+        ->assertSeeText('Sans catégorie')
+        ->assertSeeText('auteur inconnu');
 });
 
 it('shows a message when there is no post', function () {
