@@ -10,6 +10,12 @@
     <x-navbar />
 
     <main class="mx-auto w-full max-w-5xl flex-1 px-4 py-8">
+        @if (config('site.read_only'))
+            <x-alert type="warning" title="Site en lecture seule" class="mb-6">
+                Les modifications sont temporairement désactivées.
+            </x-alert>
+        @endif
+
         @if (session('success'))
             <x-alert type="success" class="mb-6">{{ session('success') }}</x-alert>
         @endif
