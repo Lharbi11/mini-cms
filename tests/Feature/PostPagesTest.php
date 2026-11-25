@@ -128,10 +128,12 @@ it('shows a single post', function () {
 });
 
 it('deletes a post after presenting a confirmation form', function () {
-    $this->actingAs(User::factory()->create());
+    $author = User::factory()->create();
+    $this->actingAs($author);
     $post = Post::factory()->create([
         'title' => 'Article à supprimer',
         'slug' => 'article-a-supprimer',
+        'user_id' => $author->id,
     ]);
 
     $this->get(route('posts.show', $post))
