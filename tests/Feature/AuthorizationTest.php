@@ -93,12 +93,22 @@ it('restricts all admin back-office routes to administrators', function () {
         ->assertForbidden()
         ->assertSeeText('Réservé aux administrateurs.');
 
+    $this->get(route('home'))
+        ->assertOk()
+        ->assertDontSee('href="'.route('admin.categories.index').'"', false)
+        ->assertDontSee('href="'.route('admin.tags.index').'"', false);
+
     $this->actingAs(User::factory()->admin()->create())
         ->get(route('admin.categories.index'))
         ->assertOk();
 
     $this->get(route('admin.tags.index'))
         ->assertOk();
+
+    $this->get(route('home'))
+        ->assertOk()
+        ->assertSee('href="'.route('admin.categories.index').'"', false)
+        ->assertSee('href="'.route('admin.tags.index').'"', false);
 });
 
 it('lists only the authenticated user posts including drafts', function () {
