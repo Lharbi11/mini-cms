@@ -24,8 +24,32 @@ it('logs in and shows the authenticated user in the navigation', function () {
     $this->get(route('posts.index'))
         ->assertOk()
         ->assertSeeText('Amira Ben Salah')
+        ->assertSeeText('Mes articles')
         ->assertSeeText('Déconnexion')
         ->assertSeeText('Vous êtes connecté.');
+});
+
+it('shows the remember me option on the login form', function () {
+    $this->get(route('login'))
+        ->assertOk()
+        ->assertSee('type="checkbox" id="remember" name="remember"', false)
+        ->assertSeeText('Se souvenir de moi');
+});
+
+it('sets a remember cookie and token when remember me is selected', function () {
+    $user = User::factory()->create(['email' => 'amira@example.com']);
+
+    $response = $this->post(route('login.store'), [
+        'email' => 'amira@example.com',
+        'password' => 'password',
+        'remember' => '1',
+    ]);
+
+    $rememberCookie = collect($response->headers->getCookies())
+        ->first(fn ($cookie) => str_starts_with($cookie->getName(), 'remember_web_'));
+
+    expect($rememberCookie)->not->toBeNull()
+        ->and($user->fresh()->remember_token)->not->toBeNull();
 });
 
 it('shows a neutral error and keeps only the email after a failed login', function () {
@@ -55,6 +79,7 @@ it('logs out and displays the guest navigation', function () {
         ->assertSeeText('Vous êtes déconnecté.')
         ->assertSeeText('Connexion')
         ->assertSeeText('Inscription')
+        ->assertDontSeeText('Mes articles')
         ->assertDontSeeText('Déconnexion')
         ->assertDontSeeText('Amira Ben Salah');
 
