@@ -31,6 +31,7 @@ it('shows a post category, author, and tags on its card', function () {
     $post = Post::factory()
         ->for($user)
         ->for($category)
+        ->published()
         ->create(['title' => 'Article avec relations']);
 
     $post->tags()->attach($tag);
@@ -89,7 +90,7 @@ it('returns 404 for an unknown category slug', function () {
 });
 
 it('shows fallback labels when a post has no category or author', function () {
-    Post::factory()->create(['title' => 'Article sans relations']);
+    Post::factory()->published()->create(['title' => 'Article sans relations']);
 
     $this->get(route('posts.index'))
         ->assertOk()

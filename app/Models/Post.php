@@ -53,4 +53,20 @@ class Post extends Model
     {
         $query->where('is_published', true);
     }
+
+    #[Scope]
+    protected function visibleTo(Builder $query, ?User $user): void
+    {
+        if ($user?->isAdmin()) {
+            return;
+        }
+
+        $query->where(function (Builder $query) use ($user) {
+            $query->published();
+
+            if ($user !== null) {
+                $query->orWhere('user_id', $user->id);
+            }
+        });
+    }
 }

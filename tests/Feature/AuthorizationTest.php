@@ -84,6 +84,58 @@ it('lets an admin update any post', function () {
     $this->assertDatabaseHas('posts', ['id' => $post->id, 'slug' => 'article-protege']);
 });
 
+it('allows published posts to guests and draft posts only to their owner or admins', function () {
+    $owner = User::factory()->create();
+    $otherAuthor = User::factory()->create();
+    $publishedPost = Post::factory()->published()->create();
+    $ownedDraft = Post::factory()->for($owner)->create();
+    $otherDraft = Post::factory()->for($otherAuthor)->create();
+
+    $this->get(route('posts.show', $publishedPost))
+        ->assertOk();
+
+    $this->get(route('posts.show', $ownedDraft))
+        ->assertForbidden();
+
+    $this->actingAs($owner)
+        ->get(route('posts.show', $ownedDraft))
+        ->assertOk();
+
+    $this->get(route('posts.show', $otherDraft))
+        ->assertForbidden();
+
+    $this->actingAs(User::factory()->admin()->create())
+        ->get(route('posts.show', $otherDraft))
+        ->assertOk();
+});
+
+it('filters the posts list by publication status and user ownership', function () {
+    $owner = User::factory()->create();
+    $otherAuthor = User::factory()->create();
+    Post::factory()->published()->create(['title' => 'Article public']);
+    Post::factory()->for($owner)->create(['title' => 'Brouillon du propriétaire']);
+    Post::factory()->for($otherAuthor)->create(['title' => 'Brouillon différent']);
+
+    $this->get(route('posts.index'))
+        ->assertOk()
+        ->assertSeeText('Article public')
+        ->assertDontSeeText('Brouillon du propriétaire')
+        ->assertDontSeeText('Brouillon différent');
+
+    $this->actingAs($owner)
+        ->get(route('posts.index'))
+        ->assertOk()
+        ->assertSeeText('Article public')
+        ->assertSeeText('Brouillon du propriétaire')
+        ->assertDontSeeText('Brouillon différent');
+
+    $this->actingAs(User::factory()->admin()->create())
+        ->get(route('posts.index'))
+        ->assertOk()
+        ->assertSeeText('Brouillon du propriétaire')
+        ->assertSeeText('Brouillon différent');
+});
+
 it('restricts all admin back-office routes to administrators', function () {
     $this->actingAs(User::factory()->create())
         ->get(route('admin.categories.index'))
