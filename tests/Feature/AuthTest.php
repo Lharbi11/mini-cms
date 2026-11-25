@@ -60,3 +60,17 @@ it('logs out and displays the guest navigation', function () {
 
     $this->assertGuest();
 });
+
+it('redirects guests from post creation and admin pages to login', function () {
+    $this->get(route('posts.create'))
+        ->assertRedirect(route('login'));
+
+    $this->post(route('posts.store'), [
+        'title' => 'Article non autorisé',
+    ])->assertRedirect(route('login'));
+
+    $this->get(route('admin.categories.index'))
+        ->assertRedirect(route('login'));
+
+    $this->assertDatabaseCount('posts', 0);
+});

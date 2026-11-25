@@ -1,6 +1,11 @@
 <?php
 
 use App\Models\Post;
+use App\Models\User;
+
+beforeEach(function () {
+    $this->actingAs(User::factory()->admin()->create());
+});
 
 test('the application returns a successful response', function () {
     $this->get('/')

@@ -3,9 +3,11 @@
 use App\Models\Category;
 use App\Models\Post;
 use App\Models\Tag;
+use App\Models\User;
 
 beforeEach(function () {
     $this->withoutVite();
+    $this->actingAs(User::factory()->admin()->create());
 });
 
 function postData(array $overrides = []): array
@@ -40,6 +42,22 @@ it('creates a post from the form', function () {
         'title' => 'Article de test',
         'slug' => 'article-de-test',
         'excerpt' => 'Un extrait court.',
+    ]);
+});
+
+it('assigns a new post to the authenticated user', function () {
+    $author = User::factory()->create();
+    $otherUser = User::factory()->create();
+
+    $response = $this->actingAs($author)->post(route('posts.store'), postData([
+        'user_id' => $otherUser->id,
+    ]));
+    $post = Post::where('slug', 'article-de-test')->firstOrFail();
+
+    $response->assertRedirect(route('posts.show', $post));
+    $this->assertDatabaseHas('posts', [
+        'id' => $post->id,
+        'user_id' => $author->id,
     ]);
 });
 

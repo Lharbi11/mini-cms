@@ -1,9 +1,11 @@
 <?php
 
 use App\Models\Post;
+use App\Models\User;
 
 beforeEach(function () {
     $this->withoutVite();
+    $this->actingAs(User::factory()->admin()->create());
 });
 
 function feedbackPostData(array $overrides = []): array

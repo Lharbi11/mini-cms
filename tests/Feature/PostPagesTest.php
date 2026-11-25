@@ -128,6 +128,7 @@ it('shows a single post', function () {
 });
 
 it('deletes a post after presenting a confirmation form', function () {
+    $this->actingAs(User::factory()->create());
     $post = Post::factory()->create([
         'title' => 'Article à supprimer',
         'slug' => 'article-a-supprimer',
@@ -157,8 +158,9 @@ it('returns 404 for an unknown post', function () {
         ->assertSee('href="'.route('posts.index').'"', false);
 });
 
-it('shows the create form', function () {
-    $this->get(route('posts.create'))
+it('shows the create form to a logged-in user', function () {
+    $this->actingAs(User::factory()->create())
+        ->get(route('posts.create'))
         ->assertOk()
         ->assertSee('Nouvel article');
 });

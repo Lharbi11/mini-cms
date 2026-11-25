@@ -2,9 +2,11 @@
 
 use App\Models\Category;
 use App\Models\Post;
+use App\Models\User;
 
 beforeEach(function () {
     $this->withoutVite();
+    $this->actingAs(User::factory()->admin()->create());
 });
 
 it('lists categories alphabetically with their post counts', function () {

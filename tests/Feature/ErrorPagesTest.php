@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\Category;
+use App\Models\User;
 
 beforeEach(function () {
     $this->withoutVite();
@@ -39,7 +40,8 @@ it('keeps category not-found responses as JSON when requested', function () {
 it('shows the styled 503 page with its message when the site is read-only', function () {
     config(['site.read_only' => true]);
 
-    $this->post(route('posts.store'), [])
+    $this->actingAs(User::factory()->create())
+        ->post(route('posts.store'), [])
         ->assertStatus(503)
         ->assertSee('Service momentanément indisponible')
         ->assertSeeText('Le site est en lecture seule.')
