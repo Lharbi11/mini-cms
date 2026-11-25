@@ -58,7 +58,8 @@ it('opens the back office to an admin', function () {
     $this->actingAs($admin)
         ->get(route('home'))
         ->assertSee(route('admin.categories.index'))
-        ->assertSee(route('admin.tags.index'));
+        ->assertSee(route('admin.tags.index'))
+        ->assertSee(route('admin.users.index'));
 });
 
 it('hides the back office links from an author', function () {
@@ -66,7 +67,8 @@ it('hides the back office links from an author', function () {
         ->get(route('home'))
         ->assertOk()
         ->assertDontSee(route('admin.categories.index'))
-        ->assertDontSee(route('admin.tags.index'));
+        ->assertDontSee(route('admin.tags.index'))
+        ->assertDontSee(route('admin.users.index'));
 });
 
 it('grants manage-tags to admins only', function () {

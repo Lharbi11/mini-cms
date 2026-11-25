@@ -141,6 +141,19 @@ it('restricts all admin back-office routes to administrators', function () {
         ->get(route('admin.categories.index'))
         ->assertForbidden();
 
+    $this->get(route('admin.users.index'))
+        ->assertForbidden();
+
+    $targetUser = User::factory()->create();
+
+    $this->patch(route('admin.users.role', $targetUser), ['role' => 'admin'])
+        ->assertForbidden();
+
+    $this->assertDatabaseHas('users', [
+        'id' => $targetUser->id,
+        'role' => 'author',
+    ]);
+
     $this->get(route('admin.tags.index'))
         ->assertForbidden()
         ->assertSeeText('Réservé aux administrateurs.');

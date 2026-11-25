@@ -34,3 +34,54 @@ it('seeds the designated test account as an admin', function () {
         'role' => 'admin',
     ]);
 });
+
+it('lets an admin list users and promote or demote another user', function () {
+    $admin = User::factory()->admin()->create();
+    $author = User::factory()->create([
+        'name' => 'Auteur à promouvoir',
+        'email' => 'auteur@example.com',
+    ]);
+
+    $this->withoutVite()
+        ->actingAs($admin)
+        ->get(route('admin.users.index'))
+        ->assertOk()
+        ->assertSeeText($author->name)
+        ->assertSeeText($author->email)
+        ->assertSeeText('author');
+
+    $this->get(route('home'))
+        ->assertOk()
+        ->assertSee('href="'.route('admin.users.index').'"', false);
+
+    $this->patch(route('admin.users.role', $author), ['role' => 'admin'])
+        ->assertRedirect(route('admin.users.index'))
+        ->assertSessionHas('success', "Le rôle de {$author->name} a été mis à jour.");
+
+    $this->assertDatabaseHas('users', [
+        'id' => $author->id,
+        'role' => 'admin',
+    ]);
+
+    $this->patch(route('admin.users.role', $author), ['role' => 'author'])
+        ->assertRedirect(route('admin.users.index'))
+        ->assertSessionHas('success', "Le rôle de {$author->name} a été mis à jour.");
+
+    $this->assertDatabaseHas('users', [
+        'id' => $author->id,
+        'role' => 'author',
+    ]);
+});
+
+it('forbids an admin from changing their own role', function () {
+    $admin = User::factory()->admin()->create();
+
+    $this->actingAs($admin)
+        ->patch(route('admin.users.role', $admin), ['role' => 'author'])
+        ->assertForbidden();
+
+    $this->assertDatabaseHas('users', [
+        'id' => $admin->id,
+        'role' => 'admin',
+    ]);
+});

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\CategoryController;
@@ -45,6 +46,8 @@ Route::middleware('writable')->group(function () {
         Route::prefix('admin')->name('admin.')->middleware('admin')->group(function () {
             Route::resource('categories', CategoryController::class)->except('show');
             Route::resource('tags', TagController::class)->except('show');
+            Route::get('/utilisateurs', [UserController::class, 'index'])->name('users.index');
+            Route::patch('/utilisateurs/{user}/role', [UserController::class, 'updateRole'])->name('users.role');
         });
     });
 
