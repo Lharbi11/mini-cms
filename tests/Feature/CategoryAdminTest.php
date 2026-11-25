@@ -9,6 +9,18 @@ beforeEach(function () {
     $this->actingAs(User::factory()->admin()->create());
 });
 
+it('forbids category management to authors', function () {
+    $this->actingAs(User::factory()->create())
+        ->get(route('admin.categories.index'))
+        ->assertForbidden();
+});
+
+it('shows the categories link to admins', function () {
+    $this->get(route('home'))
+        ->assertOk()
+        ->assertSeeText('Catégories');
+});
+
 it('lists categories alphabetically with their post counts', function () {
     $laravel = Category::factory()->create(['name' => 'Laravel', 'slug' => 'laravel']);
     $php = Category::factory()->create(['name' => 'PHP', 'slug' => 'php']);
