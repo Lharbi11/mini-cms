@@ -97,5 +97,8 @@ it('redirects guests from post creation and admin pages to login', function () {
     $this->get(route('admin.categories.index'))
         ->assertRedirect(route('login'));
 
+    $this->get(route('admin.tags.index'))
+        ->assertRedirect(route('login'));
+
     $this->assertDatabaseCount('posts', 0);
 });

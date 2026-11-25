@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Middleware\EnsureSiteIsWritable;
+use App\Http\Middleware\EnsureUserIsAdmin;
 use App\Models\Category;
 use App\Models\Post;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -19,6 +20,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
             'writable' => EnsureSiteIsWritable::class,
+            'admin' => EnsureUserIsAdmin::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

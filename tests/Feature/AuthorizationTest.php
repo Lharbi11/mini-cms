@@ -84,13 +84,20 @@ it('lets an admin update any post', function () {
     $this->assertDatabaseHas('posts', ['id' => $post->id, 'slug' => 'article-protege']);
 });
 
-it('keeps the category back office for admins', function () {
+it('restricts all admin back-office routes to administrators', function () {
     $this->actingAs(User::factory()->create())
         ->get(route('admin.categories.index'))
         ->assertForbidden();
 
+    $this->get(route('admin.tags.index'))
+        ->assertForbidden()
+        ->assertSeeText('Réservé aux administrateurs.');
+
     $this->actingAs(User::factory()->admin()->create())
         ->get(route('admin.categories.index'))
+        ->assertOk();
+
+    $this->get(route('admin.tags.index'))
         ->assertOk();
 });
 
