@@ -168,3 +168,22 @@ Back-office des catégories et des tags, messages de validation en français, pa
 ![Barre de navigation d'un utilisateur connecté, avec le message « Vous êtes connecté. »](screenshots/s11-connexion.png)
 
 ![Page 403 quand un auteur ouvre la modification de l'article d'un autre auteur](screenshots/s11-interdit.png)
+
+## Comparaison avec le starter kit Livewire
+
+Le starter kit Livewire se choisit lors de `laravel new`. Fortify fournit les routes et le backend d'authentification sans interface ; le kit ajoute les écrans avec Livewire 4 et Flux. Cette comparaison décrit le dépôt officiel `laravel/livewire-starter-kit` au 10 novembre 2026 ; une installation plus récente peut différer.
+
+| Critère | Mini-CMS (authentification manuelle) | Starter kit Livewire |
+|---|---|---|
+| Routes d'authentification | `routes/web.php` définit `/inscription`, `/connexion` et `/deconnexion`. | Fortify enregistre les routes depuis son paquet ; elles ne figurent pas dans `routes/web.php`. |
+| Inscription | `RegisterController`, `RegisterRequest` et `resources/views/auth/register.blade.php`. | `app/Actions/Fortify/CreateNewUser.php` et `resources/views/pages/auth/register.blade.php`. |
+| Connexion | `LoginController::store`, `LoginRequest` et `resources/views/auth/login.blade.php`, avec `Auth::attempt` et régénération de session. | Contrôleur Fortify et `resources/views/pages/auth/login.blade.php`. |
+| Déconnexion | `LoginController::destroy` appelle `logout`, `invalidate` et `regenerateToken`. | Route de déconnexion Fortify ; les mêmes opérations dans `app/Livewire/Actions/Logout.php`. |
+| Limitation des tentatives | Aucune limitation n'est configurée. | 5 tentatives par minute, limitées par adresse e-mail et adresse IP (`app/Providers/FortifyServiceProvider.php`). |
+| Mot de passe oublié | Non implémenté. | Activable avec `Features::resetPasswords()` dans `config/fortify.php`. |
+| Vérification de l'e-mail | Non implémentée ; `User` ne vérifie pas `MustVerifyEmail`. | `Features::emailVerification()`, `MustVerifyEmail` sur `User` et middleware `verified` sur `/dashboard`. |
+| Double authentification et passkeys | Non implémentées. | Activables avec `Features::twoFactorAuthentication()` et `Features::passkeys()`. |
+| Rôles et autorisations | Rôle et `isAdmin()` dans `app/Models/User.php`, Gates dans `app/Providers/AppServiceProvider.php`, `app/Policies/PostPolicy.php` et middleware `app/Http/Middleware/EnsureUserIsAdmin.php`. | Aucun rôle métier fourni : les rôles et autorisations restent à écrire. |
+| Tests | Tests Pest, notamment `AuthTest`, `AuthorizationTest`, `AdminAccessTest` et `PostVisibilityTest`. | 10 fichiers de tests Feature couvrant Auth, Settings et Dashboard, écrits avec PHPUnit dans le dépôt officiel. |
+
+Dans un vrai projet, je garderais Fortify et les protections du kit pour éviter de réimplémenter des mécanismes sensibles comme la récupération de mot de passe, la vérification d'adresse et la limitation des tentatives. Je conserverais aussi des autorisations et des tests propres au domaine : ni Fortify ni le starter kit ne définissent les rôles métier de l'application.
